@@ -5,7 +5,6 @@ package gobeam
 import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
-	"github.com/xackery/gobeam/library"
 	"net/http"
 	"reflect"
 	"sync"
@@ -98,7 +97,7 @@ type Session struct {
 	endpoints    []string
 	authKey      string //ws authkey
 	LoginPayload *LoginPayload
-	config       *library.GoBeamConfig
+	config       *GoBeamConfig
 	// General configurable settings.
 
 	// Authentication token for this session

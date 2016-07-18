@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/xackery/gobeam/library"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -129,7 +128,7 @@ func unmarshal(data []byte, v interface{}) error {
 func (s *Session) Login() (err error) {
 
 	if s.config == nil {
-		s.config = &library.GoBeamConfig{}
+		s.config = &GoBeamConfig{}
 		err = s.config.Load("gobeam.json")
 		if err != nil {
 			err = fmt.Errorf("Failed to load gobeam.json config: %s", err.Error())

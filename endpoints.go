@@ -1,5 +1,5 @@
 //Heavily inspired/derived from discordgo https://github.com/bwmarrin/discordgo
-package beam
+package gobeam
 
 var (
 	//STATUS = "https://beam.pro/api/v1/system/health"

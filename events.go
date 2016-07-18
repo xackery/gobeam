@@ -1,10 +1,8 @@
 //Heavily inspired/derived from discordgo https://github.com/bwmarrin/discordgo
 
-package beam
+package gobeam
 
-import (
-	"github.com/xackery/gobeam/core"
-)
+import ()
 
 var eventToInterface = map[string]interface{}{
 	"Connect":     ConnectEvent{},     //Chat and Interactive
@@ -33,9 +31,9 @@ type UserLeaveEvent struct {
 }
 
 type ReportEvent struct {
-	*core.Report
+	*Report
 }
 
 type ErrorEvent struct {
-	*core.Error
+	*Error
 }

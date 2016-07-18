@@ -1,6 +1,6 @@
 //Heavily inspired/derived from discordgo https://github.com/bwmarrin/discordgo
 
-package beam
+package gobeam
 
 import (
 	"bytes"
@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
-	"github.com/xackery/gobeam/core"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -155,7 +154,7 @@ func (s *Session) OpenRobot() (err error) {
 		return
 	}*/
 
-	hs := &core.Handshake{
+	hs := &Handshake{
 		Channel:   &s.LoginPayload.Channel.ID,
 		StreamKey: &s.authKey,
 	}
@@ -385,7 +384,7 @@ func (s *Session) event(messageType int, message []byte) {
 			if len(message) < 2 {
 				return
 			}
-			report := &core.Report{}
+			report := &Report{}
 			err = proto.Unmarshal(message[1:], report)
 			if err != nil {
 				fmt.Println("Error unmarshalling report", err.Error())
@@ -396,7 +395,7 @@ func (s *Session) event(messageType int, message []byte) {
 			break
 		case 3: //error
 			fmt.Printf("[%s] error\n", s.Type)
-			errorResp := &core.Error{}
+			errorResp := &Error{}
 			err = proto.Unmarshal(message[1:], errorResp)
 			if err != nil {
 				fmt.Println("Error unmarshalling error", err.Error())

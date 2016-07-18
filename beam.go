@@ -1,6 +1,6 @@
 //Heavily inspired/derived from discordgo https://github.com/bwmarrin/discordgo
 
-package beam
+package gobeam
 
 import (
 	"reflect"

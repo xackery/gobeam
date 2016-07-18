@@ -25,7 +25,7 @@ func main() {
 		return
 	}
 
-	//Create a interactive session, copy auth data from chatbot
+	//Create a robot session, copy auth data from chatbot
 	robot := beam.Session{
 		Debug:        false,
 		Cookies:      chatbot.Cookies,

@@ -39,7 +39,7 @@ type handshakeOp struct {
 	Data handshakeData `json:"d"`
 }
 
-// Open opens a websocket connection to Discord.
+// Open opens a websocket connection to Beam.
 func (s *Session) Open() (err error) {
 
 	s.Lock()
@@ -71,7 +71,7 @@ func (s *Session) Open() (err error) {
 		return
 	}
 
-	/*err = s.wsConn.WriteJSON(handshakeOp{2, handshakeData{3, s.Token, handshakeProperties{runtime.GOOS, "Discordgo v" + VERSION, "", "", ""}, 250, s.Compress}})
+	/*err = s.wsConn.WriteJSON(handshakeOp{2, handshakeData{3, s.Token, handshakeProperties{runtime.GOOS, "beamgo v" + VERSION, "", "", ""}, 250, s.Compress}})
 	if err != nil {
 		return
 	}*/
@@ -149,7 +149,7 @@ func (s *Session) OpenRobot() (err error) {
 		err = fmt.Errorf("Failed to establish websocket (%d): %s", resp.StatusCode, string(response))
 	}
 
-	/*err = s.wsConn.WriteJSON(handshakeOp{2, handshakeData{3, s.Token, handshakeProperties{runtime.GOOS, "Discordgo v" + VERSION, "", "", ""}, 250, s.Compress}})
+	/*err = s.wsConn.WriteJSON(handshakeOp{2, handshakeData{3, s.Token, handshakeProperties{runtime.GOOS, "beamgo v" + VERSION, "", "", ""}, 250, s.Compress}})
 	if err != nil {
 		return
 	}*/
@@ -271,8 +271,8 @@ type heartbeatOp struct {
 	Data int `json:"d"`
 }
 
-// heartbeat sends regular heartbeats to Discord so it knows the client
-// is still connected.  If you do not send these heartbeats Discord will
+// heartbeat sends regular heartbeats to Beam so it knows the client
+// is still connected.  If you do not send these heartbeats Beam will
 // disconnect the websocket connection after a few seconds.
 func (s *Session) heartbeat(wsConn *websocket.Conn, listening <-chan interface{}, i time.Duration) {
 

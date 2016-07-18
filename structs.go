@@ -89,7 +89,7 @@ type LoginPayload struct {
 	} `json:"preferences,omitempty"`
 }
 
-// A Session represents a connection to the Discord API.
+// A Session represents a connection to the Beam API.
 type Session struct {
 	Type    string //Session Type
 	Cookies []*http.Cookie
@@ -183,7 +183,7 @@ type ChatMessageDetail struct {
 }
 
 // A State contains the current known state.
-// As discord sends this in a READY blob, it seems reasonable to simply
+// As Beam sends this in a READY blob, it seems reasonable to simply
 // use that struct as the data store.
 type State struct {
 	sync.RWMutex

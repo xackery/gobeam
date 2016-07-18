@@ -10,17 +10,17 @@ const VERSION = "0.01.0"
 
 // validateHandler takes an event handler func, and returns the type of event.
 // eg.
-//     Session.validateHandler(func (s *discordgo.Session, m *discordgo.MessageCreate))
-//     will return the reflect.Type of *discordgo.MessageCreate
+//     Session.validateHandler(func (s *beamgo.Session, m *beamgo.MessageCreate))
+//     will return the reflect.Type of *beamgo.MessageCreate
 func (s *Session) validateHandler(handler interface{}) reflect.Type {
 	handlerType := reflect.TypeOf(handler)
 
 	if handlerType.NumIn() != 2 {
-		panic("Unable to add event handler, handler must be of the type func(*discordgo.Session, *discordgo.EventType).")
+		panic("Unable to add event handler, handler must be of the type func(*beamgo.Session, *beamgo.EventType).")
 	}
 
 	if handlerType.In(0) != reflect.TypeOf(s) {
-		panic("Unable to add event handler, first argument must be of type *discordgo.Session.")
+		panic("Unable to add event handler, first argument must be of type *beamgo.Session.")
 	}
 
 	eventType := handlerType.In(1)
@@ -34,15 +34,15 @@ func (s *Session) validateHandler(handler interface{}) reflect.Type {
 }
 
 // AddHandler allows you to add an event handler that will be fired anytime
-// the Discord WSAPI event that matches the interface fires.
-// eventToInterface in events.go has a list of all the Discord WSAPI events
+// the Beam WSAPI event that matches the interface fires.
+// eventToInterface in events.go has a list of all the Beam WSAPI events
 // and their respective interface.
 // eg:
-//     Session.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
+//     Session.AddHandler(func(s *beamgo.Session, m *beamgo.MessageCreate) {
 //     })
 //
 // or:
-//     Session.AddHandler(func(s *discordgo.Session, m *discordgo.PresenceUpdate) {
+//     Session.AddHandler(func(s *beamgo.Session, m *beamgo.PresenceUpdate) {
 //     })
 // The return value of this method is a function, that when called will remove the
 // event handler.

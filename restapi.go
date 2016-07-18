@@ -15,8 +15,8 @@ import (
 // ErrJSONUnmarshal is returned for JSON Unmarshall errors.
 var ErrJSONUnmarshal = errors.New("json unmarshal")
 
-// Request makes a (GET/POST/...) Requests to Discord REST API with JSON data.
-// All the other Discord REST Calls in this file use this function.
+// Request makes a (GET/POST/...) Requests to Beam REST API with JSON data.
+// All the other Beam REST Calls in this file use this function.
 func (s *Session) Request(method, urlStr string, data interface{}) (response []byte, err error) {
 
 	if s.Debug {
@@ -34,7 +34,7 @@ func (s *Session) Request(method, urlStr string, data interface{}) (response []b
 	return s.request(method, urlStr, "application/json", body)
 }
 
-// request makes a (GET/POST/...) Requests to Discord REST API.
+// request makes a (GET/POST/...) Requests to Beam REST API.
 func (s *Session) request(method, urlStr, contentType string, b []byte) (response []byte, err error) {
 
 	if s.Debug {
@@ -121,10 +121,10 @@ func unmarshal(data []byte, v interface{}) error {
 }
 
 // ------------------------------------------------------------------------------------------------
-// Functions specific to Discord Sessions
+// Functions specific to Beam Sessions
 // ------------------------------------------------------------------------------------------------
 
-// Login asks the Discord server for an authentication token.
+// Login asks the Beam server for an authentication token.
 func (s *Session) Login() (err error) {
 
 	if s.config == nil {
@@ -158,7 +158,7 @@ func (s *Session) Login() (err error) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// Functions specific to Discord Websockets
+// Functions specific to Beam Websockets
 // ------------------------------------------------------------------------------------------------
 
 // Gateway returns the a websocket Gateway address

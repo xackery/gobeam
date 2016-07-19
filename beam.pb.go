@@ -7,6 +7,7 @@ Package gobeam is a generated protocol buffer package.
 
 It is generated from these files:
 	beam.proto
+	grpc.proto
 
 It has these top-level messages:
 	Handshake
@@ -16,6 +17,7 @@ It has these top-level messages:
 	ProgressUpdate
 	HistogramUint1D
 	Coordinate
+	StreamRequest
 */
 package gobeam
 

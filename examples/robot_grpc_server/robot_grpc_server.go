@@ -1,0 +1,141 @@
+package main
+
+import (
+	"fmt"
+	beam "github.com/xackery/gobeam"
+	"google.golang.org/grpc"
+	"log"
+	"net"
+	"time"
+)
+
+var delay = (1 * time.Second)
+
+type robotService struct {
+	reportChan chan *beam.Report
+}
+
+func main() {
+	//Create a chatbot session.
+	chatbot := beam.Session{
+		Debug: false,
+	}
+
+	//subscribe to events
+	chatbot.AddHandler(userJoin)
+	chatbot.AddHandler(userLeave)
+	chatbot.AddHandler(userChat)
+
+	//Log in
+	log.Println("[Chatbot] Logging in")
+	err := chatbot.Login()
+	if err != nil {
+		log.Println("[Chatbot] Error logging in:", err.Error())
+		return
+	}
+
+	//Create a robot session, copy auth data from chatbot
+	robot := beam.Session{
+		Debug:        false,
+		Cookies:      chatbot.Cookies,
+		LoginPayload: chatbot.LoginPayload,
+	}
+
+	//Make a robot service provider, and a channel
+	rs := &robotService{
+		reportChan: make(chan *beam.Report, 10),
+	}
+
+	//subscribe to robot events
+	robot.AddHandler(rs.reportRobot)
+	robot.AddHandler(errorRobot)
+
+	// Open chatbot websocket
+	log.Println("[Chatbot] Connecting")
+	err = chatbot.Open()
+	if err != nil {
+		log.Println("[Chatbot] Error opening winsock:", err.Error())
+		return
+	}
+	log.Println("[Chatbot] Success!")
+
+	//Open robot websocket
+	log.Println("[Robot] Connecting")
+	err = robot.OpenRobot()
+	if err != nil {
+		log.Println("[Robot] Error opening winsock:", err)
+		return
+	}
+	log.Println("[Robot] Success!")
+
+	//Start grpc listener
+	addr := "127.0.0.1:50051"
+	log.Println("[gRPC] Listening on", addr)
+	lis, err := net.Listen("tcp", addr)
+	if err != nil {
+		log.Println("[gRPC] Failed to listen: %v", err.Error())
+		return
+	}
+	s := grpc.NewServer()
+	beam.RegisterRobotServiceServer(s, rs)
+	s.Serve(lis)
+
+	// Simple way to keep program running until any key press.
+	var input string
+	fmt.Scanln(&input)
+	return
+}
+
+func userJoin(s *beam.Session, m *beam.UserJoinEvent) {
+	log.Printf("[Chatbot] %s joined the channel.\n", m.Username)
+}
+
+func userLeave(s *beam.Session, m *beam.UserJoinEvent) {
+	log.Printf("[Chatbot] %s left the channel.\n", m.Username)
+}
+
+func userChat(s *beam.Session, m *beam.ChatMessageEvent) {
+	//Whisper will set a target
+	if m.Target != "" {
+		if len(m.Message.Messages) < 1 {
+			fmt.Printf("[Chatbot]  [%d] %s WHISPER=> %s (No Message?)\n", m.UserId, m.Target, m.Username)
+			return
+		}
+		log.Printf("[Chatbot] [%d] %s WHISPER=> %s: %s\n", m.UserId, m.Username, m.Target, m.Message.Messages[0].Text)
+		return
+	}
+	if len(m.Message.Messages) < 1 {
+		fmt.Printf("[Chatbot] [%d] %s (No Message?)\n", m.UserId, m.Username)
+		return
+	}
+	log.Printf("[Chatbot] [%d] %s: %s\n", m.UserId, m.Username, m.Message.Messages[0].Text)
+}
+
+//Subscribe robot service to reports, and add them to channel
+func (rs *robotService) reportRobot(s *beam.Session, m *beam.ReportEvent) {
+	//Flush any old reports (used when a client isn't actively consuming them)
+	for len(rs.reportChan) > 0 {
+		<-rs.reportChan
+	}
+	//Add new report to buffer
+	rs.reportChan <- m.Report
+}
+
+func errorRobot(s *beam.Session, m *beam.ErrorEvent) {
+	log.Printf("[Robot] Error: %s\n", m)
+}
+
+//Stream the report output to a connected RPC client
+func (rs *robotService) StreamReport(req *beam.StreamRequest, stream beam.RobotService_StreamReportServer) (err error) {
+	fmt.Println("Client connected")
+	//Technically more than one client can connect and
+	//compete for the report consumption. Should consider broadcasting
+	for {
+		newReport := <-rs.reportChan
+		fmt.Println("Sending stream item")
+		if err := stream.Send(newReport); err != nil {
+			return err
+		}
+	}
+	return nil
+}

@@ -4,7 +4,7 @@ package main
 import (
 	"fmt"
 	beam "github.com/xackery/gobeam"
-	"github.com/xackery/w32"
+	rawr "github.com/xackery/w32/user"
 	"log"
 	"time"
 )
@@ -111,39 +111,40 @@ func reportRobot(s *beam.Session, m *beam.ReportEvent) {
 			fmt.Println("[Robot] Press Start")
 		}
 	}
+	return
 }
 
 func errorRobot(s *beam.Session, m *beam.ErrorEvent) {
 	log.Printf("[Robot] Error: %s\n", m)
 }
 
-func PressLeftPaddle() (err error) {
+func PressLeftPaddle() {
 	go sendKey(0x4B, delay) //a key
 }
 
-func PressRightPaddle() (err error) {
+func PressRightPaddle() {
 	go sendKey(0x4D, delay) //d key
 }
 
-func PressStartButton() (err error) {
+func PressStartButton() {
 	go sendKey(0x48, delay) //w key
 }
 
-func sendKey(keycode uint16, duration time.Duration) (err error) {
-	input := w32.INPUT{
-		Type: w32.INPUT_KEYBOARD,
-		Ki: w32.KEYBDINPUT{
+func sendKey(keyCode uint16, duration time.Duration) (err error) {
+	input := rawr.INPUT{
+		Type: rawr.INPUT_KEYBOARD,
+		Ki: rawr.KEYBDINPUT{
 			WScan:   keyCode,
 			DwFlags: 0x0008, //hold key
 			Time:    0,
 		},
 	}
-	inputs := []w32.INPUT{}
+	inputs := []rawr.INPUT{}
 	inputs = append(inputs, input)
-	w32.SendInput(inputs)
+	rawr.SendInput(inputs)
 	time.Sleep(duration)
 	inputs[0].Ki.DwFlags = 0x0002 | 0x0008 // release key
-	w32.SendInput(inputs)
+	//w32.ASendInput(inputs)
 	time.Sleep(1 * time.Second)
 	return
 }

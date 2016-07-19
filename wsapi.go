@@ -415,10 +415,11 @@ func (s *Session) event(messageType int, message []byte) {
 
 	//TODO: Add a transaction id detector to figure out what sort of unmarhsalling to do
 
-	//used to be e.type was eventtointerface
 	if e != nil && e.Type == "event" {
 		i := eventToInterface[e.Event]
-
+		if s.Debug {
+			fmt.Println("Event translated to", e.Event)
+		}
 		if i != nil {
 			// Create a new instance of the event type.
 			i = reflect.New(reflect.TypeOf(i)).Interface()
@@ -569,6 +570,54 @@ func (s *Session) History(messageCount int) (err error) {
 		Id:     1, //TODO: Make a unique transaction number requester
 	}
 	evt.Arguments = append(evt.Arguments, messageCount)
+
+	err = s.wsConn.WriteJSON(evt)
+	return
+}
+
+//Start a giveaway in the channel.
+func (s *Session) Giveaway() (err error) {
+	s.RLock()
+	defer s.RUnlock()
+
+	if s.wsConn == nil {
+		return errors.New("No websocket connection exists.")
+	}
+
+	if s.Type != "Chat" {
+		err = fmt.Errorf("Invalid session type, needs to be chat: %s\n", s.Type)
+		return
+	}
+
+	evt := &Event{
+		Type:   "method",
+		Method: "giveaway",
+		Id:     1, //TODO: Make a unique transaction number requester
+	}
+
+	err = s.wsConn.WriteJSON(evt)
+	return
+}
+
+//A ping method, used in environments where websocket implementations do not natively support pings.
+func (s *Session) Ping() (err error) {
+	s.RLock()
+	defer s.RUnlock()
+
+	if s.wsConn == nil {
+		return errors.New("No websocket connection exists.")
+	}
+
+	if s.Type != "Chat" {
+		err = fmt.Errorf("Invalid session type, needs to be chat: %s\n", s.Type)
+		return
+	}
+
+	evt := &Event{
+		Type:   "method",
+		Method: "ping",
+		Id:     1, //TODO: Make a unique transaction number requester
+	}
 
 	err = s.wsConn.WriteJSON(evt)
 	return

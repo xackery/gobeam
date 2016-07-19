@@ -147,10 +147,12 @@ type Session struct {
 	listening chan interface{}
 }
 
-type NewUser struct {
-	Username string   `json:"username"`
-	roles    []string `json:"roles"`
-	id       int      `json:"id"`
+type User struct {
+	Id          int      `json:"id"`
+	UserId      int      `json:"user"` //Used by UserUpdate
+	Username    string   `json:"username"`
+	Roles       []string `json:"roles"`
+	Permissions []string `json:"permissions"`
 }
 
 // An Event provides a basic initial struct for all websocket event.
@@ -173,18 +175,53 @@ type ChatMessage struct {
 	Message   struct {
 		Messages []ChatMessageDetail `json:"message"`
 	} `json:"message"`
-	Meta   ChatMeta `json:"meta"`
-	Target string   `json:"target"`
+	Meta   ChatMeta `json:"meta,omitempty"`
+	Target string   `json:"target"` //Used by whisper
 }
 
 type ChatMeta struct {
-	Whisper bool `json:"whisper"`
+	Whisper bool `json:"whisper,omitempty"` //Omitted when whisper is not true
+	Me      bool `json:"me,omitempty"`      //This is you do an event
 }
 
 type ChatMessageDetail struct {
-	Type string `json:"type"`
-	Data string `json:"data"`
-	Text string `json:"text"`
+	Type     string `json:"type"`
+	Data     string `json:"data"`
+	Text     string `json:"text"`
+	Path     string `json:"path"`
+	Url      string `json:"url"`
+	Source   string `json:"source"`
+	Pack     string `json:"pack"`
+	Coords   Coords `json:"coords"`
+	Username string `json:"username"` //Used when tagging
+	Id       int    `json:"id"`       //Used when tagging
+}
+
+type Coords struct {
+	X      float64 `json:"x"`
+	Y      float64 `json:"y"`
+	Width  float64 `json:"width"`
+	Height float64 `float:"height"`
+}
+
+//Used by PollStart and PollEnd
+type Poll struct {
+	Q         string   `json:"q"`       //Question being asked
+	Answers   []string `json:"answers"` //Possible options for answers
+	Author    Author   `json:"author"`
+	Duration  int      `json:"duration"`
+	EndsAt    int      `json:"endsAt"`
+	Voters    int      `json:"voters"`
+	Responses struct {
+		Good int `json:"good"`
+		Bad  int `json:"bad"`
+	} `json:"responses"`
+}
+
+type Author struct {
+	Username  string   `json:"user_name"`
+	UserId    int      `json:"user_id"`
+	UserRoles []string `json:"user_roles"`
 }
 
 // A State contains the current known state.

@@ -10,13 +10,15 @@ import (
 func main() {
 	//Create a chatbot session.
 	chatbot := beam.Session{
-		Debug: true,
+		Debug: false,
 	}
 
 	//subscribe to events
 	chatbot.AddHandler(userJoin)
 	chatbot.AddHandler(userLeave)
 	chatbot.AddHandler(userChat)
+	chatbot.AddHandler(pollStart)
+	chatbot.AddHandler(pollEnd)
 
 	//Log in
 	log.Println("[Chatbot] Logging in")
@@ -72,4 +74,12 @@ func userChat(s *beam.Session, m *beam.ChatMessageEvent) {
 		return
 	}
 	log.Printf("[Chatbot] [%d] %s: %s\n", m.UserId, m.Username, m.Message.Messages[0].Text)
+}
+
+func pollStart(s *beam.Session, m *beam.PollStartEvent) {
+	log.Println("Poll started:", m.Q, m.Duration, m.Voters)
+}
+
+func pollEnd(s *beam.Session, m *beam.PollEndEvent) {
+	log.Println("Poll ended:", m.Q, m.Duration, m.Voters)
 }

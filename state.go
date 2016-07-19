@@ -19,7 +19,7 @@ func NewState() *State {
 	}
 }
 
-func (s *State) OnUserJoin(user *NewUser) error {
+func (s *State) OnUserJoin(user *User) error {
 	if s == nil {
 		return ErrNilState
 	}
@@ -41,7 +41,7 @@ func (s *State) onInterface(se *Session, i interface{}) (err error) {
 
 	switch t := i.(type) {
 	case *UserJoinEvent:
-		err = s.OnUserJoin(t.NewUser)
+		err = s.OnUserJoin(t.User)
 	}
 
 	return

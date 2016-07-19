@@ -5,13 +5,19 @@ package gobeam
 import ()
 
 var eventToInterface = map[string]interface{}{
-	"Connect":     ConnectEvent{},     //Chat and Interactive
-	"Disconnect":  DisconnectEvent{},  //Chat and Interactive
-	"ChatMessage": ChatMessageEvent{}, //Chat
-	"UserJoin":    UserJoinEvent{},    //Chat
-	"UserLeave":   UserLeaveEvent{},   //Chat
-	"Report":      ReportEvent{},      //Interactive
-	"Error":       ErrorEvent{},       //Interactive
+	"Connect":       ConnectEvent{},       //Chat and Interactive
+	"Disconnect":    DisconnectEvent{},    //Chat and Interactive
+	"ChatMessage":   ChatMessageEvent{},   //Chat
+	"DeleteMessage": DeleteMessageEvent{}, //Chat
+	"PurgeMessage":  PurgeMessageEvent{},  //Chat
+	"ClearMessages": ClearMessagesEvent{}, //Chat
+	"UserJoin":      UserJoinEvent{},      //Chat
+	"UserLeave":     UserLeaveEvent{},     //Chat
+	"UserUpdate":    UserUpdateEvent{},    //Chat
+	"PollStart":     PollStartEvent{},     //Chat
+	"PollEnd":       PollEndEvent{},       //Chat
+	"Report":        ReportEvent{},        //Interactive
+	"Error":         ErrorEvent{},         //Interactive
 }
 
 type ConnectEvent struct{}
@@ -22,12 +28,39 @@ type ChatMessageEvent struct {
 	*ChatMessage
 }
 
+//Only contains an ID
+type DeleteMessageEvent struct {
+	*ChatMessage
+}
+
+//Only contains a userid
+type PurgeMessageEvent struct {
+	*ChatMessage
+}
+
+//No data usually contained
+type ClearMessagesEvent struct {
+	*ChatMessage
+}
+
 type UserJoinEvent struct {
-	*NewUser
+	*User
 }
 
 type UserLeaveEvent struct {
-	*NewUser
+	*User
+}
+
+type UserUpdateEvent struct {
+	*User
+}
+
+type PollStartEvent struct {
+	*Poll
+}
+
+type PollEndEvent struct {
+	*Poll
 }
 
 type ReportEvent struct {

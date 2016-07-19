@@ -39,11 +39,13 @@ func main() {
 	time.Sleep(1 * time.Second)
 
 	//Send a message
-	err = chatbot.Whisper("xackery", "Test!")
-	if err != nil {
-		log.Println("[Chatbot] Error sending message:", err.Error())
-		return
-	}
+	/*
+		err = chatbot.Whisper("xackery", "Test!")
+		if err != nil {
+			log.Println("[Chatbot] Error sending message:", err.Error())
+			return
+		}
+	*/
 
 	// Simple way to keep program running until any key press.
 	var input string

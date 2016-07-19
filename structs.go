@@ -224,6 +224,11 @@ type Author struct {
 	UserRoles []string `json:"user_roles"`
 }
 
+type UserTimeout struct {
+	User     User `json:"user"`
+	Duration int
+}
+
 // A State contains the current known state.
 // As Beam sends this in a READY blob, it seems reasonable to simply
 // use that struct as the data store.

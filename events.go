@@ -14,6 +14,7 @@ var eventToInterface = map[string]interface{}{
 	"UserJoin":      UserJoinEvent{},      //Chat
 	"UserLeave":     UserLeaveEvent{},     //Chat
 	"UserUpdate":    UserUpdateEvent{},    //Chat
+	"UserTimeout":   UserTimeoutEvent{},   //Chat
 	"PollStart":     PollStartEvent{},     //Chat
 	"PollEnd":       PollEndEvent{},       //Chat
 	"Report":        ReportEvent{},        //Interactive
@@ -53,6 +54,10 @@ type UserLeaveEvent struct {
 
 type UserUpdateEvent struct {
 	*User
+}
+
+type UserTimeoutEvent struct {
+	*UserTimeout
 }
 
 type PollStartEvent struct {

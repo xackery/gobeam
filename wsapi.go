@@ -351,20 +351,6 @@ func (s *Session) event(messageType int, message []byte) {
 	var reader io.Reader
 	reader = bytes.NewBuffer(message)
 
-	/*if messageType == 2 {
-		z, err1 := zlib.NewReader(reader)
-		if err1 != nil {
-			fmt.Println(err1)
-			return
-		}
-		defer func() {
-			err := z.Close()
-			if err != nil {
-				fmt.Println("error closing zlib:", err)
-			}
-		}()
-		reader = z
-	}*/
 	//fmt.Printf("[%s] Parsing Event\n", s.Type)
 
 	var e *Event
@@ -413,24 +399,21 @@ func (s *Session) event(messageType int, message []byte) {
 
 		//fmt.Printf("[%s] dump: %s\n", s.Type, string(bData))
 		return
+	}
 
-		//err = proto.Unmarshal(bData, e)
-		if err != nil {
-			fmt.Printf("[%s] proto unmarshal: %s\n", s.Type, err.Error())
-			return
-		}
-	} else {
-		decoder := json.NewDecoder(reader)
+	//Chat events are handled here
+	decoder := json.NewDecoder(reader)
 
-		if err = decoder.Decode(&e); err != nil {
-			fmt.Printf("[%s] jsonDecode event: %s\n", s.Type, err.Error())
-			return
-		}
+	if err = decoder.Decode(&e); err != nil {
+		fmt.Printf("[%s] jsonDecode event: %s\n", s.Type, err.Error())
+		return
 	}
 
 	if s.Debug {
 		printEvent(s.Type, e)
 	}
+
+	//TODO: Add a transaction id detector to figure out what sort of unmarhsalling to do
 
 	//used to be e.type was eventtointerface
 	if e != nil && e.Type == "event" {
@@ -473,13 +456,14 @@ func (s *Session) Msg(message string) (err error) {
 	evt := &Event{
 		Type:   "method",
 		Method: "msg",
-		Id:     2,
+		Id:     2, //TODO: Make a unique transaction number requester
 	}
 	evt.Arguments = append(evt.Arguments, message)
 	err = s.wsConn.WriteJSON(evt)
 	return
 }
 
+//Whisper a user
 func (s *Session) Whisper(username string, message string) (err error) {
 	s.RLock()
 	defer s.RUnlock()
@@ -496,11 +480,95 @@ func (s *Session) Whisper(username string, message string) (err error) {
 	evt := &Event{
 		Type:   "method",
 		Method: "whisper",
-		Id:     5,
+		Id:     5, //TODO: Make a unique transaction number requester
 	}
 
 	evt.Arguments = append(evt.Arguments, username)
 	evt.Arguments = append(evt.Arguments, message)
+
+	err = s.wsConn.WriteJSON(evt)
+	return
+}
+
+//Casts a vote for the current poll, arguments is the vote option index.
+func (s *Session) Vote(option int) (err error) {
+	s.RLock()
+	defer s.RUnlock()
+
+	if s.wsConn == nil {
+		return errors.New("No websocket connection exists.")
+	}
+
+	if s.Type != "Chat" {
+		err = fmt.Errorf("Invalid session type, needs to be chat: %s\n", s.Type)
+		return
+	}
+
+	evt := &Event{
+		Type:   "method",
+		Method: "vote",
+		Id:     3, //TODO: Make a unique transaction number requester
+	}
+	evt.Arguments = append(evt.Arguments, option)
+
+	err = s.wsConn.WriteJSON(evt)
+	return
+}
+
+//Times a User out, they cannot send messages until the duration is over.
+func (s *Session) Timeout(username string, duration string) (err error) {
+	s.RLock()
+	defer s.RUnlock()
+
+	if s.wsConn == nil {
+		return errors.New("No websocket connection exists.")
+	}
+
+	if s.Type != "Chat" {
+		err = fmt.Errorf("Invalid session type, needs to be chat: %s\n", s.Type)
+		return
+	}
+
+	evt := &Event{
+		Type:   "method",
+		Method: "timeout",
+		Id:     4, //TODO: Make a unique transaction number requester
+	}
+	evt.Arguments = append(evt.Arguments, username)
+	evt.Arguments = append(evt.Arguments, duration)
+
+	err = s.wsConn.WriteJSON(evt)
+	return
+}
+
+// Request previous messages from this chat from before you joined.
+// The argument controls how many messages are requested. 100 is the maximum.
+func (s *Session) History(messageCount int) (err error) {
+	if messageCount > 100 {
+		err = fmt.Errorf("messageCount must be less than 101")
+		return
+	}
+	if messageCount < 1 {
+		messageCount = 1
+	}
+	s.RLock()
+	defer s.RUnlock()
+
+	if s.wsConn == nil {
+		return errors.New("No websocket connection exists.")
+	}
+
+	if s.Type != "Chat" {
+		err = fmt.Errorf("Invalid session type, needs to be chat: %s\n", s.Type)
+		return
+	}
+
+	evt := &Event{
+		Type:   "method",
+		Method: "history",
+		Id:     1, //TODO: Make a unique transaction number requester
+	}
+	evt.Arguments = append(evt.Arguments, messageCount)
 
 	err = s.wsConn.WriteJSON(evt)
 	return

@@ -479,3 +479,29 @@ func (s *Session) Msg(message string) (err error) {
 	err = s.wsConn.WriteJSON(evt)
 	return
 }
+
+func (s *Session) Whisper(username string, message string) (err error) {
+	s.RLock()
+	defer s.RUnlock()
+
+	if s.wsConn == nil {
+		return errors.New("No websocket connection exists.")
+	}
+
+	if s.Type != "Chat" {
+		err = fmt.Errorf("Invalid session type, needs to be chat: %s\n", s.Type)
+		return
+	}
+
+	evt := &Event{
+		Type:   "method",
+		Method: "whisper",
+		Id:     5,
+	}
+
+	evt.Arguments = append(evt.Arguments, username)
+	evt.Arguments = append(evt.Arguments, message)
+
+	err = s.wsConn.WriteJSON(evt)
+	return
+}

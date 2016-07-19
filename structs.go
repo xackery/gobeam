@@ -173,7 +173,12 @@ type ChatMessage struct {
 	Message   struct {
 		Messages []ChatMessageDetail `json:"message"`
 	} `json:"message"`
-	Meta string `json:"meta"`
+	Meta   ChatMeta `json:"meta"`
+	Target string   `json:"target"`
+}
+
+type ChatMeta struct {
+	Whisper bool `json:"whisper"`
 }
 
 type ChatMessageDetail struct {

@@ -61,7 +61,7 @@ func main() {
 }
 
 func userJoin(s *beam.Session, m *beam.UserJoinEvent) {
-	log.Println("[Chatbot] %s joined the channel.\n", m.Username)
+	log.Printf("[Chatbot] %s joined the channel.\n", m.Username)
 }
 
 func userLeave(s *beam.Session, m *beam.UserJoinEvent) {
@@ -69,7 +69,20 @@ func userLeave(s *beam.Session, m *beam.UserJoinEvent) {
 }
 
 func userChat(s *beam.Session, m *beam.ChatMessageEvent) {
-	log.Printf("[Chatbot] %s: %s\n", m.Username, m.Message.Messages[0].Text)
+	//Whisper will set a target
+	if m.Target != "" {
+		if len(m.Message.Messages) < 1 {
+			fmt.Printf("[Chatbot]  [%d] %s WHISPER=> %s (No Message?)\n", m.UserId, m.Target, m.Username)
+			return
+		}
+		log.Printf("[Chatbot] [%d] %s WHISPER=> %s: %s\n", m.UserId, m.Username, m.Target, m.Message.Messages[0].Text)
+		return
+	}
+	if len(m.Message.Messages) < 1 {
+		fmt.Printf("[Chatbot] [%d] %s (No Message?)\n", m.UserId, m.Username)
+		return
+	}
+	log.Printf("[Chatbot] [%d] %s: %s\n", m.UserId, m.Username, m.Message.Messages[0].Text)
 }
 
 func reportRobot(s *beam.Session, m *beam.ReportEvent) {

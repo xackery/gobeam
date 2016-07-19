@@ -455,3 +455,27 @@ func (s *Session) event(messageType int, message []byte) {
 	}
 	return
 }
+
+// Send a Chat Message. An active winsock connection must be active.
+func (s *Session) Msg(message string) (err error) {
+	s.RLock()
+	defer s.RUnlock()
+
+	if s.wsConn == nil {
+		return errors.New("No websocket connection exists.")
+	}
+
+	if s.Type != "Chat" {
+		err = fmt.Errorf("Invalid session type, needs to be chat: %s\n", s.Type)
+		return
+	}
+
+	evt := &Event{
+		Type:   "method",
+		Method: "msg",
+		Id:     2,
+	}
+	evt.Arguments = append(evt.Arguments, message)
+	err = s.wsConn.WriteJSON(evt)
+	return
+}

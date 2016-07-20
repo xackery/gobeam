@@ -21,7 +21,7 @@ type LoginPayload struct {
 	Verified    bool   `json:"verified,omitempty"`
 	Experience  int    `json:"experience,omitempty"`
 	Sparks      int    `json:"sparks,omitempty"`
-	AvatarURL   int    `json:"avatarUrl,omitempty"`
+	AvatarURL   string `json:"avatarUrl,omitempty"`
 	AllowEmail  bool   `json:"allowEmail,omitempty"`
 	Bio         int    `json:"bio,omitempty"`
 	PrimaryTeam int    `json:"primaryTeam,omitempty"`
@@ -33,52 +33,54 @@ type LoginPayload struct {
 		Name string `json:"name,omitempty"`
 	} `json:"groups,omitempty"`
 	Channel struct {
-		ID                   uint32 `json:"id,omitempty"`
-		UserID               int    `json:"userId,omitempty"`
-		Token                string `json:"token,omitempty"`
-		Online               bool   `json:"online,omitempty"`
-		Featured             bool   `json:"featured,omitempty"`
-		Partnered            bool   `json:"partnered,omitempty"`
-		TranscodingProfileID int    `json:"transcodingProfileId,omitempty"`
-		Suspended            bool   `json:"suspended,omitempty"`
-		Name                 string `json:"name,omitempty"`
-		Audience             string `json:"audience,omitempty"`
-		ViewersTotal         int    `json:"viewersTotal,omitempty"`
-		ViewersCurrent       int    `json:"viewersCurrent,omitempty"`
-		NumFollowers         int    `json:"numFollowers,omitempty"`
-		Description          int    `json:"description,omitempty"`
-		TypeID               int    `json:"typeId,omitempty"`
-		Interactive          bool   `json:"interactive,omitempty"`
-		TetrisGameID         int    `json:"tetrisGameId,omitempty"`
-		Ftl                  int    `json:"ftl,omitempty"`
-		HasVod               bool   `json:"hasVod,omitempty"`
-		LanguageID           int    `json:"languageId,omitempty"`
-		CoverID              int    `json:"coverId,omitempty"`
-		ThumbnailID          int    `json:"thumbnailId,omitempty"`
-		BadgeID              int    `json:"badgeId,omitempty"`
-		HosteeID             int    `json:"hosteeId,omitempty"`
-		CreatedAt            string `json:"createdAt,omitempty"`
-		UpdatedAt            string `json:"updatedAt,omitempty"`
-		DeletedAt            int    `json:"deletedAt,omitempty"`
+		ID                       uint32 `json:"id,omitempty"`
+		UserID                   int    `json:"userId,omitempty"`
+		Token                    string `json:"token,omitempty"`
+		Online                   bool   `json:"online,omitempty"`
+		Featured                 bool   `json:"featured,omitempty"`
+		Partnered                bool   `json:"partnered,omitempty"`
+		TranscodingProfileID     int    `json:"transcodingProfileId,omitempty"`
+		Suspended                bool   `json:"suspended,omitempty"`
+		Name                     string `json:"name,omitempty"`
+		Audience                 string `json:"audience,omitempty"`
+		ViewersTotal             int    `json:"viewersTotal,omitempty"`
+		ViewersCurrent           int    `json:"viewersCurrent,omitempty"`
+		NumFollowers             int    `json:"numFollowers,omitempty"`
+		NumSubscribers           int    `json:"numSubscribers,omitempty"`
+		MaxConcurrentSubscribers int    `json:"maxConcurrentSubscribers,omitempty"`
+		Description              string `json:"description,omitempty"`
+		TypeID                   int    `json:"typeId,omitempty"`
+		Interactive              bool   `json:"interactive,omitempty"`
+		TetrisGameID             int    `json:"tetrisGameId,omitempty"`
+		Ftl                      int    `json:"ftl,omitempty"`
+		HasVod                   bool   `json:"hasVod,omitempty"`
+		LanguageID               int    `json:"languageId,omitempty"`
+		CoverID                  int    `json:"coverId,omitempty"`
+		ThumbnailID              int    `json:"thumbnailId,omitempty"`
+		BadgeID                  int    `json:"badgeId,omitempty"`
+		HosteeID                 int    `json:"hosteeId,omitempty"`
+		CreatedAt                string `json:"createdAt,omitempty"`
+		UpdatedAt                string `json:"updatedAt,omitempty"`
+		DeletedAt                int    `json:"deletedAt,omitempty"`
 	} `json:"channel,omitempty"`
-	HasTwoFactor bool `json:"hasTwoFactor,omitempty"`
-	TwoFactor    struct {
+	TwoFactor struct {
 		Enabled     bool `json:"enabled,omitempty"`
 		CodesViewed bool `json:"codesViewed,omitempty"`
 	} `json:"twoFactor,omitempty"`
-	Preferences struct {
-		ChatTimestamps       bool   `json:"chat:timestamps,omitempty"`
+	HasTwoFactor bool `json:"hasTwoFactor,omitempty"`
+	Preferences  struct {
 		ChatSoundsPlay       string `json:"chat:sounds:play,omitempty"`
-		ChatWhispers         bool   `json:"chat:whispers,omitempty"`
 		ChatSoundsHTML5      bool   `json:"chat:sounds:html5,omitempty"`
+		ChatTimestamps       bool   `json:"chat:timestamps,omitempty"`
+		ChatWhispers         bool   `json:"chat:whispers,omitempty"`
 		ChatChromakey        bool   `json:"chat:chromakey,omitempty"`
 		ChatLurkmode         bool   `json:"chat:lurkmode,omitempty"`
-		ChannelMatureAllowed bool   `json:"channel:mature:allowed,omitempty"`
 		ChannelNotifications struct {
 			Ids        []string `json:"ids,omitempty"`
 			Transports []string `json:"transports,omitempty"`
 		} `json:"channel:notifications,omitempty"`
-		ChannelPlayer struct {
+		ChannelMatureAllowed bool `json:"channel:mature:allowed,omitempty"`
+		ChannelPlayer        struct {
 			Vod  string `json:"vod,omitempty"`
 			Rtmp string `json:"rtmp,omitempty"`
 			Ftl  string `json:"ftl,omitempty"`

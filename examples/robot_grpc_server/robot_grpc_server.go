@@ -12,6 +12,10 @@ import (
 var delay = (1 * time.Second)
 
 type robotService struct {
+	session *beam.Session
+}
+
+type streamSession struct {
 	reportChan chan *beam.Report
 }
 
@@ -43,11 +47,10 @@ func main() {
 
 	//Make a robot service provider, and a channel
 	rs := &robotService{
-		reportChan: make(chan *beam.Report, 10),
+		session: &robot,
 	}
 
 	//subscribe to robot events
-	robot.AddHandler(rs.reportRobot)
 	robot.AddHandler(errorRobot)
 
 	// Open chatbot websocket
@@ -111,28 +114,32 @@ func userChat(s *beam.Session, m *beam.ChatMessageEvent) {
 	log.Printf("[Chatbot] [%d] %s: %s\n", m.UserId, m.Username, m.Message.Messages[0].Text)
 }
 
-//Subscribe robot service to reports, and add them to channel
-func (rs *robotService) reportRobot(s *beam.Session, m *beam.ReportEvent) {
-	//Flush any old reports (used when a client isn't actively consuming them)
-	for len(rs.reportChan) > 0 {
-		<-rs.reportChan
-	}
-	//Add new report to buffer
-	rs.reportChan <- m.Report
-}
-
 func errorRobot(s *beam.Session, m *beam.ErrorEvent) {
 	log.Printf("[Robot] Error: %s\n", m)
 }
 
+func (ss *streamSession) reportRobot(s *beam.Session, m *beam.ReportEvent) {
+	//Flush any old reports (used when a client isn't actively consuming them)
+	for len(ss.reportChan) > 0 {
+		<-ss.reportChan
+	}
+	//Add new report to buffer
+	ss.reportChan <- m.Report
+}
+
 //Stream the report output to a connected RPC client
 func (rs *robotService) StreamReport(req *beam.StreamRequest, stream beam.RobotService_StreamReportServer) (err error) {
-	fmt.Println("Client connected")
-	//Technically more than one client can connect and
-	//compete for the report consumption. Should consider broadcasting
+
+	fmt.Println("[gRPC] Client connected")
+	//Create a stream session
+	ss := &streamSession{
+		reportChan: make(chan *beam.Report, 10),
+	}
+	//subscribe to report events
+	rs.session.AddHandler(ss.reportRobot)
+
 	for {
-		newReport := <-rs.reportChan
-		fmt.Println("Sending stream item")
+		newReport := <-ss.reportChan
 		if err := stream.Send(newReport); err != nil {
 			return err
 		}

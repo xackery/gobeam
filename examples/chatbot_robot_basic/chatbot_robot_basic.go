@@ -64,7 +64,7 @@ func userJoin(s *beam.Session, m *beam.UserJoinEvent) {
 	log.Printf("[Chatbot] %s joined the channel.\n", m.Username)
 }
 
-func userLeave(s *beam.Session, m *beam.UserJoinEvent) {
+func userLeave(s *beam.Session, m *beam.UserLeaveEvent) {
 	log.Printf("[Chatbot] %s left the channel.\n", m.Username)
 }
 

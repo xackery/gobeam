@@ -1,6 +1,30 @@
 # Custom stuff
 gobeam.json
 
+# Ignore packages for csharp project
+/examples/robot_grpc_client/csharp/gobeam/packages/*
+
+#csharp files
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+# User-specific files (MonoDevelop/Xamarin Studio)
+*.userprefs
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+
 # Compiled Object files, Static and Dynamic libs (Shared Objects)
 *.o
 *.a

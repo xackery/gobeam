@@ -378,7 +378,6 @@ func (s *Session) event(messageType int, message []byte) {
 			}
 			s.handle(&ReportEvent{Report: report})
 			return
-			break
 		case 3: //error
 			fmt.Printf("[%s] error\n", s.Type)
 			errorResp := &Error{}

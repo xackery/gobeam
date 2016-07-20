@@ -8,7 +8,7 @@ import (
 
 type GoBeamConfig struct {
 	isLoaded bool
-	Username string `json:"username`
+	Username string `json:"username"`
 	Password string `json:"password"`
 }
 

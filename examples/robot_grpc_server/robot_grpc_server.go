@@ -76,7 +76,7 @@ func main() {
 	log.Println("[gRPC] Listening on", addr)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
-		log.Println("[gRPC] Failed to listen: %v", err.Error())
+		log.Println("[gRPC] Failed to listen:", err.Error())
 		return
 	}
 	s := grpc.NewServer()
@@ -144,5 +144,4 @@ func (rs *robotService) StreamReport(req *beam.StreamRequest, stream beam.RobotS
 			return err
 		}
 	}
-	return nil
 }

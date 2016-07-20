@@ -22,7 +22,7 @@ func main() {
 	log.Println("[gRPC] Connecting to", addr)
 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
-		log.Println("[gRPC] Failed to connect: %v", err.Error())
+		log.Println("[gRPC] Failed to connect:", err.Error())
 		return
 	}
 	defer conn.Close()

@@ -155,7 +155,7 @@ type User struct {
 	Permissions []string `json:"permissions"`
 }
 
-// An Event provides a basic initial struct for all websocket event.
+//All chat websocket events are handled with this.
 type Event struct {
 	Type      string          `json:"type,omitempty"`
 	Event     string          `json:"event,omitempty"`
@@ -166,6 +166,7 @@ type Event struct {
 	Data      json.RawMessage `json:"data,omitempty"` //json.RawMessage `json:"data"`
 }
 
+//Handles websocket events of chatmessage
 type ChatMessage struct {
 	Channel   int      `json:"channel"`
 	Id        string   `json:"id"`
@@ -179,11 +180,13 @@ type ChatMessage struct {
 	Target string   `json:"target"` //Used by whisper
 }
 
+//Part of chatmessage
 type ChatMeta struct {
 	Whisper bool `json:"whisper,omitempty"` //Omitted when whisper is not true
 	Me      bool `json:"me,omitempty"`      //This is you do an event
 }
 
+//Part of chatmessage
 type ChatMessageDetail struct {
 	Type     string `json:"type"`
 	Data     string `json:"data"`
@@ -197,6 +200,7 @@ type ChatMessageDetail struct {
 	Id       int    `json:"id"`       //Used when tagging
 }
 
+//Part of chatmessage
 type Coords struct {
 	X      float64 `json:"x"`
 	Y      float64 `json:"y"`
@@ -218,12 +222,14 @@ type Poll struct {
 	} `json:"responses"`
 }
 
+//Used by Poll
 type Author struct {
 	Username  string   `json:"user_name"`
 	UserId    int      `json:"user_id"`
 	UserRoles []string `json:"user_roles"`
 }
 
+//When a timeout event is received
 type UserTimeout struct {
 	User     User `json:"user"`
 	Duration int

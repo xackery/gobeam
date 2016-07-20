@@ -2,8 +2,10 @@ syntax = "proto3";
 import "beam.proto";
 package gobeam;
 
+//Handles streaming reports via gRPC
 service RobotService {
 	rpc StreamReport (StreamRequest) returns (stream Report) {}
 }
 
+//Used by RobotService StreamReport
 message StreamRequest {}

@@ -21,35 +21,30 @@ namespace gobeam
             this.client = client;
         }
 
-
-        /// <summary>
-        /// Server-streaming example. Calls listFeatures with a rectangle of interest. Prints each response feature as it arrives.
-        /// </summary>
+        //Handle Stream of Reports
         public async Task StreamReport()
         {
-            Console.WriteLine("StreamReport!");
+            //Start Stream Report
             try
             {
+                //Prepare a Stream Report for usage
                 using (var call = client.StreamReport(new StreamRequest()))
                 {                    
                     var responseStream = call.ResponseStream;
-                    Console.WriteLine("Trying");
+                    //Loop the stream, consuming data
                     while (await responseStream.MoveNext())
                     {
-                        Console.WriteLine("Loop report");
                         Report report = responseStream.Current;
+                        //Echo out the report information
                         Console.WriteLine(report);
                     }
-                    Console.WriteLine("Ending");
                 }
             }
             catch (RpcException e)
             {
-                Console.WriteLine("Fail");
                 MessageBox.Show("RPC Failed: " + e);
                 throw;
             }
-            Console.WriteLine("End");
         }
     }
 
@@ -64,11 +59,12 @@ namespace gobeam
         {
             try
             {
-                var channel = new Channel("192.168.1.109:50051", ChannelCredentials.Insecure);
+                //Create a connection
+                var channel = new Channel("127.0.0.1:50051", ChannelCredentials.Insecure);
                 var rClient = new RobotService.RobotServiceClient(channel);
                 var client = new RobotServiceClient(rClient);
                 Console.WriteLine("Loaded");
-                client.StreamReport().Wait();
+                client.StreamReport();
             }
             catch (Exception err)
             {

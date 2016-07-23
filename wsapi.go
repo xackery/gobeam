@@ -642,18 +642,19 @@ func (s *Session) ProgressUpdate(prg *ProgressUpdate) (err error) {
 		return
 	}
 
-	fmt.Println("marshalling")
 	bhs, err := proto.Marshal(prg)
 	if err != nil {
 		return
 	}
 
 	//the mysterious 0x08? unsure it's usage, but it makes things work on handshake
-	bPayload := []byte{0x04, 0x08, byte(len(bhs))}
+	bPayload := []byte{0x04}
 	for _, b := range bhs {
 		bPayload = append(bPayload, b)
 	}
-	fmt.Println("sending message")
+	if s.Debug {
+		fmt.Printf("sending ProgressUpdate message % x\n", bPayload)
+	}
 	err = s.wsConn.WriteMessage(websocket.BinaryMessage, bPayload)
 	if err != nil {
 		return

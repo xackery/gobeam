@@ -9,7 +9,8 @@ import (
 func main() {
 	//Create a chatbot session.
 	chatbot := beam.Session{
-		Debug: false,
+		UseCookies: true,
+		Debug:      true,
 	}
 
 	//subscribe to events
@@ -27,7 +28,9 @@ func main() {
 
 	//Create a robot session, copy auth data from chatbot
 	robot := beam.Session{
-		Debug:        false,
+		Debug:        true,
+		UseCookies:   true,
+		CsrfToken:    chatbot.CsrfToken,
 		Cookies:      chatbot.Cookies,
 		LoginPayload: chatbot.LoginPayload,
 	}

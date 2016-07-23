@@ -46,17 +46,22 @@ func (s *Session) request(method, urlStr, contentType string, b []byte) (respons
 		return
 	}
 
-	for _, c := range s.Cookies {
-		req.Header.Set("Cookie", fmt.Sprintf("%s=%s", c.Name, c.Value))
+	if s.UseCookies {
+		for _, c := range s.Cookies {
+			if c.Name != "sid" {
+				continue
+			}
+			req.Header.Add("Cookie", fmt.Sprintf("%s=%s", c.Name, c.Value))
+		}
+	} else {
+		req.Header.Set("X-CSRF-Token", s.CsrfToken)
 	}
 
 	// Not used on initial login..
-	// TODO: Verify if a login, otherwise complain about no-token
 	if s.Token != "" {
 		req.Header.Set("authorization", s.Token)
 	}
 
-	req.Header.Set("X-Csrf-Token", s.CsrfToken)
 	req.Header.Set("Content-Type", contentType)
 	// TODO: Make a configurable static variable.
 	req.Header.Set("User-Agent", fmt.Sprintf("GoBeamBot (https://github.com/xackery/gobeam, v%s)", VERSION))
@@ -85,7 +90,11 @@ func (s *Session) request(method, urlStr, contentType string, b []byte) (respons
 		return
 	}
 
-	s.CsrfToken = resp.Header.Get("X-Csrf-Token")
+	if s.UseCookies {
+		s.Cookies = resp.Cookies()
+	} else {
+		s.CsrfToken = resp.Header.Get("X-CSRF-Token")
+	}
 
 	if s.Debug {
 
@@ -109,7 +118,6 @@ func (s *Session) request(method, urlStr, contentType string, b []byte) (respons
 	default: // Error condition
 		err = fmt.Errorf("HTTP %s, %s", resp.Status, response)
 	}
-	s.Cookies = resp.Cookies()
 
 	return
 }
@@ -184,6 +192,10 @@ func (s *Session) Gateway() (gateway string, err error) {
 	if len(temp.Endpoints) > 0 {
 		gateway = temp.Endpoints[0]
 	}
+	//if len(temp.Authkey) < 1 {
+	//	err = fmt.Errorf("No authkey provided")
+	//	return
+	//}
 	s.authKey = temp.Authkey
 
 	return
@@ -210,7 +222,10 @@ func (s *Session) TetrisGateway() (gateway string, err error) {
 	if err != nil {
 		return
 	}
-
+	if len(temp.Key) < 1 {
+		err = fmt.Errorf("No authkey provided")
+		return
+	}
 	gateway = temp.Address
 	s.authKey = temp.Key
 

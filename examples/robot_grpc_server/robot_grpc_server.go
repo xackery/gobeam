@@ -22,7 +22,8 @@ type streamSession struct {
 func main() {
 	//Create a chatbot session.
 	chatbot := beam.Session{
-		Debug: false,
+		Debug:      true,
+		UseCookies: true,
 	}
 
 	//subscribe to events
@@ -40,9 +41,11 @@ func main() {
 
 	//Create a robot session, copy auth data from chatbot
 	robot := beam.Session{
-		Debug:        false,
+		Debug:        true,
+		UseCookies:   true,
 		Cookies:      chatbot.Cookies,
 		LoginPayload: chatbot.LoginPayload,
+		CsrfToken:    chatbot.CsrfToken,
 	}
 
 	//Make a robot service provider, and a channel

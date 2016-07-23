@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/websocket"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"reflect"
 	"time"
@@ -124,6 +125,9 @@ func (s *Session) OpenRobot() (err error) {
 	if err != nil {
 		return
 	}
+	if s.Debug {
+		log.Println("[Robot] Websocket connection")
+	}
 
 	header := http.Header{}
 	header.Add("accept-encoding", "zlib")
@@ -149,11 +153,6 @@ func (s *Session) OpenRobot() (err error) {
 		err = fmt.Errorf("Failed to establish websocket (%d): %s", resp.StatusCode, string(response))
 	}
 
-	/*err = s.wsConn.WriteJSON(handshakeOp{2, handshakeData{3, s.Token, handshakeProperties{runtime.GOOS, "beamgo v" + VERSION, "", "", ""}, 250, s.Compress}})
-	if err != nil {
-		return
-	}*/
-
 	hs := &Handshake{
 		Channel:   &s.LoginPayload.Channel.ID,
 		StreamKey: &s.authKey,
@@ -163,11 +162,6 @@ func (s *Session) OpenRobot() (err error) {
 	if err != nil {
 		return
 	}
-
-	/*bLen := []byte{0, 0}
-	tmpSize := binary.PutUvarint(bLen, uint64(len(bhs)))
-	fmt.Println("Size:", tmpSize)
-	*/
 
 	//the mysterious 0x08? unsure it's usage, but it makes things work on handshake
 	bPayload := []byte{0x00, 0x08, byte(len(bhs))}
@@ -222,7 +216,7 @@ func (s *Session) listen(wsConn *websocket.Conn, listening <-chan interface{}) {
 	for {
 		messageType, message, err := wsConn.ReadMessage()
 		if s.Debug {
-			fmt.Printf("[%s] New message %d: %s (%d)\n", s.Type, messageType, string(message), len(message))
+			fmt.Printf("[%s] New message %d: % x (%d)\n", s.Type, messageType, string(message), len(message))
 		}
 		if err != nil {
 			// Detect if we have been closed manually. If a Close() has already
@@ -358,6 +352,16 @@ func (s *Session) event(messageType int, message []byte) {
 	if s.Type == "Interactive" {
 		//fmt.Printf("[%s]message length: %d\n", s.Type, len(message))
 		//fmt.Println(message)
+		if s.Debug {
+			fmt.Printf("[%s] Wire messageType %d (%d len)\n", s.Type, messageType, len(message))
+		}
+
+		if len(message) < 1 {
+			if s.Debug {
+				fmt.Printf("[%s] discarded wire", s.Type)
+			}
+			return
+		}
 
 		switch messageType {
 		case 0: //Hanshake, should never see
@@ -366,7 +370,9 @@ func (s *Session) event(messageType int, message []byte) {
 			//fmt.Printf("[%s] handshake ack!\n", s.Type)
 			break
 		case 2: //report
-			//fmt.Printf("[%s] report: %s\n", s.Type, string(message))
+			if s.Debug {
+				fmt.Printf("[%s] report: % x\n", s.Type, string(message))
+			}
 			if len(message) < 2 {
 				return
 			}
@@ -619,5 +625,39 @@ func (s *Session) Ping() (err error) {
 	}
 
 	err = s.wsConn.WriteJSON(evt)
+	return
+}
+
+//A prog event may be sent up periodically at the behest of the Robot. It contains an array of objects for multiple controls on the frontend.
+func (s *Session) ProgressUpdate(prg *ProgressUpdate) (err error) {
+	s.RLock()
+	defer s.RUnlock()
+
+	if s.wsConn == nil {
+		return errors.New("No websocket connection exists.")
+	}
+
+	if s.Type != "Interactive" {
+		err = fmt.Errorf("Invalid session type, needs to be interactive: %s\n", s.Type)
+		return
+	}
+
+	fmt.Println("marshalling")
+	bhs, err := proto.Marshal(prg)
+	if err != nil {
+		return
+	}
+
+	//the mysterious 0x08? unsure it's usage, but it makes things work on handshake
+	bPayload := []byte{0x04, 0x08, byte(len(bhs))}
+	for _, b := range bhs {
+		bPayload = append(bPayload, b)
+	}
+	fmt.Println("sending message")
+	err = s.wsConn.WriteMessage(websocket.BinaryMessage, bPayload)
+	if err != nil {
+		return
+	}
+	fmt.Println("Done?")
 	return
 }

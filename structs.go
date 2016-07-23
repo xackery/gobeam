@@ -101,6 +101,7 @@ type Session struct {
 	LoginPayload *LoginPayload
 	config       *GoBeamConfig
 	CsrfToken    string
+	UseCookies   bool
 	// General configurable settings.
 
 	// Authentication token for this session

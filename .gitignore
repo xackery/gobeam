@@ -8,6 +8,7 @@ gobeam.json
 # Ignore packages for csharp project
 /examples/robot_grpc_client/csharp/gobeam/packages/*
 /examples/pinball_grpc_client/csharp/gobeam/packages/*
+/examples/game_grpc_client/csharp/gobeam/packages/*
 
 #csharp files
 # User-specific files

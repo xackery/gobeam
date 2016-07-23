@@ -130,6 +130,11 @@ func (ss *streamSession) reportRobot(s *beam.Session, m *beam.ReportEvent) {
 	ss.reportChan <- m.Report
 }
 
+func (rs *robotService) ProgressUpdate(req *beam.ProgressUpdateRequest) (resp *beam.ProgressUpdateResponse, err error) {
+	err = rs.ProgressUpdate(req.ProgressUpdate)
+	return
+}
+
 //Stream the report output to a connected RPC client
 func (rs *robotService) StreamReport(req *beam.StreamRequest, stream beam.RobotService_StreamReportServer) (err error) {
 

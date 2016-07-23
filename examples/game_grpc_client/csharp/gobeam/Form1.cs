@@ -23,7 +23,6 @@ namespace gobeam
         // Declaring one joystick (Device id 1) and a position structure. 
         static public vJoy joystick;
         static public vJoy.JoystickState iReport;
-        static public uint id = 1;
 
         //Create a key binding list
         public KeyBind[] keys = { };
@@ -52,21 +51,23 @@ namespace gobeam
         {
             instance = this;
             keys = new KeyBind[]{
-                new KeyBind(0, "Left", "Tactile", "Q", 0x53),
-                new KeyBind(1, "Left", "Tactile", "W", w32.VK_D),
-                new KeyBind(2, "Joy", "Joystick", "1", 1),
+               /* new KeyBind(0, "W", "Tactile", "W", 0x57),
+                new KeyBind(1, "A", "Tactile", "A", 0x41),
+                new KeyBind(2, "D", "Tactile", "D", 0x44),
+                new KeyBind(3, "LEFT", "Tactile", "LEFT", 0x25),
+                new KeyBind(4, "RIGHT", "Tactile", "RIGHT", 0x27),
+                new KeyBind(5, "UP", "Tactile", "UP", 0x26),
+                new KeyBind(6, "4", "Tactile", "4", 0x64),
+                new KeyBind(7, "8", "Tactile", "8", 0x68),
+                new KeyBind(8, "6", "Tactile", "6", 0x66),*/
+                new KeyBind(0, "Joy", "Joystick", "1", 1),
             };
             foreach (var key in keys)
             {
                 grdControls.Rows.Add(key.Index, key.Label, key.Type, key.KeyName);
             }
-
             joystick = new vJoy();
             iReport = new vJoy.JoystickState();
-            if (!joystick.vJoyEnabled())
-            {
-                btnTestJoystick.Text = "Detect Joystick";
-            }
         }
 
         private void attachProcess()
@@ -325,10 +326,19 @@ namespace gobeam
 
         private void btnTestJoystick_Click(object sender, EventArgs e)
         {
-            if (btnTestJoystick.Text == "Detect Joysticks")
+
+            
+            if (!joystick.vJoyEnabled())
+            {
+                btnTestJoystick.Text = "Detect Joystick";
+                MessageBox.Show("Joystick is not enabled.");
+                return;
+            }
+            if (btnTestJoystick.Text == "Detect Joystick")
             {
                 foreach (var key in keys)
                 {
+                    UInt32 id = key.KeyCode;
                     if (key.Type != "Joystick") continue;
                     if (key.KeyCode < 1)
                     {
@@ -343,29 +353,31 @@ namespace gobeam
                         btnTestJoystick.Text = "Detect Joystick";
                         return;
                     }
-                    //Console.WriteLine("Vendor: {0}\nProduct :{1}\nVersion Number:{2}\n", joystick.GetvJoyManufacturerString(), joystick.GetvJoyProductString(), joystick.GetvJoySerialNumberString());
+                    Console.WriteLine("Vendor: {0}\nProduct :{1}\nVersion Number:{2}\n", joystick.GetvJoyManufacturerString(), joystick.GetvJoyProductString(), joystick.GetvJoySerialNumberString());
 
                     // Get the state of the requested device
                     VjdStat status = joystick.GetVJDStatus(id);
                     switch (status)
                     {
                         case VjdStat.VJD_STAT_OWN:
-                            key.IsEnabled = true; //Console.WriteLine("vJoy Device {0} is already owned by this feeder\n", id);
+                            key.IsEnabled = true; 
+                            Console.WriteLine("vJoy Device {0} is already owned by this feeder\n", id);
                             break;
                         case VjdStat.VJD_STAT_FREE:
-                            key.IsEnabled = true; //Console.WriteLine("vJoy Device {0} is free\n", id);
+                            key.IsEnabled = true; 
+                            Console.WriteLine("vJoy Device {0} is free\n", id);
                             break;
                         case VjdStat.VJD_STAT_BUSY:
                             MessageBox.Show("Joystick " + key.KeyCode + " is being used by another feeder, please close any applications controlling this and try again.");
-                            //Console.WriteLine("vJoy Device {0} is already owned by another feeder\nCannot continue\n", id);
+                            Console.WriteLine("vJoy Device {0} is already owned by another feeder\nCannot continue\n", id);
                             return;
                         case VjdStat.VJD_STAT_MISS:
                             MessageBox.Show("Joystick " + key.KeyCode + " is not installed or disabled, please remedy and try again.");
-                            //Console.WriteLine("vJoy Device {0} is not installed or disabled\nCannot continue\n", id);
+                            Console.WriteLine("vJoy Device {0} is not installed or disabled\nCannot continue\n", id);
                             return;
                         default:
                             MessageBox.Show("Joystick " + key.KeyCode + " caused a general error that isn't known. Please adjust settings outside of program and try again.");
-                            //Console.WriteLine("vJoy Device {0} general error\nCannot continue\n", id);
+                            Console.WriteLine("vJoy Device {0} general error\nCannot continue\n", id);
                             return;
                     };
 
@@ -409,7 +421,7 @@ namespace gobeam
                         return;
                     }
                 }
-                MessageBox.Show("Joysticks are configured successfully. Press Test Joystick if you wish to test them.");
+                //MessageBox.Show("Joysticks are configured successfully. Press Test Joystick if you wish to test them.");
                 btnTestJoystick.Text = "Test Joystick";
                 return;
             } else if (btnTestJoystick.Text == "Test Joystick")
@@ -436,13 +448,13 @@ namespace gobeam
         private int testJoystickDirection;
         private void tmrTestJoystick_Tick(object sender, EventArgs e)
         {
-           // if (processHandleWindow != w32.GetForegroundWindow())
-           // {
-            //    SetStatus("Focus the process to test controls!");
-             //   return;
-            //}
+            if (processHandleWindow != w32.GetForegroundWindow())
+            {
+                SetStatus("Focus the process to test controls!");
+               return;
+            }
 
-            if (grdControls.Rows.Count - 2 < testJoystickIndex)
+            if (testJoystickDirection == 0 && grdControls.Rows.Count - 2 < testJoystickIndex)
             {
                 tmrTestJoystick.Enabled = false;
                 SetStatus("Test Completed.");
@@ -456,66 +468,69 @@ namespace gobeam
                 return;
             }            
             string direction = "";
+            UInt32 id = keys[testIndex].KeyCode;
+            //Get max value
+            long maxval = 0;
+            joystick.GetVJDAxisMax(id, HID_USAGES.HID_USAGE_X, ref maxval);
+            // Reset this device to default values
+            joystick.ResetVJD(id);
 
-            joystick.SetAxis(50, keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_X);
-            joystick.SetAxis(50, keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
-
-            if (testJoystickIndex == 0)
+            if (testJoystickDirection == 0)
             {
                 direction = "100% up";
-                joystick.SetAxis(100, keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
+                joystick.SetAxis((int)maxval, keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
             }
-            if (testJoystickIndex == 1)
+            if (testJoystickDirection == 1)
             {
                 direction = "100% down";
                 joystick.SetAxis(0, keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
             }
 
-            if (testJoystickIndex == 2)
+            if (testJoystickDirection == 2)
             {
                 direction = "50% up";
-                joystick.SetAxis(75, keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
+                joystick.SetAxis((int)(maxval*0.75f), keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
             }
-            if (testJoystickIndex == 3)
+            if (testJoystickDirection == 3)
             {
                 direction = "50% down";
-                joystick.SetAxis(25, keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
+                joystick.SetAxis((int)(maxval * 0.25f), keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
             }
 
-            if (testJoystickIndex == 4)
+            if (testJoystickDirection == 4)
             {
                 direction = "100% right";
-                joystick.SetAxis(100, keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_X);
+                joystick.SetAxis((int)(maxval * 1f), keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_X);
             }
-            if (testJoystickIndex == 5)
+            if (testJoystickDirection == 5)
             {
                 direction = "100% left";
-                joystick.SetAxis(0, keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_X);
+                joystick.SetAxis((int)(maxval * 0f), keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_X);
             }
-            if (testJoystickIndex == 6)
+            if (testJoystickDirection == 6)
             {
                 direction = "50% right";
-                joystick.SetAxis(75, keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_X);
+                joystick.SetAxis((int)(maxval * 0.75f), keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_X);
             }
-            if (testJoystickIndex == 7)
+            if (testJoystickDirection == 7)
             {
                 direction = "50% left";
-                joystick.SetAxis(25, keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_X);
+                joystick.SetAxis((int)(maxval * 0.25f), keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_X);
             }
-            if (testJoystickIndex == 8)
+            if (testJoystickDirection == 8)
             {
                 direction = "25% down-right";
-                joystick.SetAxis(62, keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_X);
-                joystick.SetAxis(62, keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
+                joystick.SetAxis((int)(maxval * 0.62f), keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_X);
+                joystick.SetAxis((int)(maxval * 0.62f), keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
             }
-            if (testJoystickIndex == 9)
+            if (testJoystickDirection == 9)
             {
                 direction = "25% up-left";
-                joystick.SetAxis(38, keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_X);
-                joystick.SetAxis(38, keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
+                joystick.SetAxis((int)(maxval * 0.38f), keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_X);
+                joystick.SetAxis((int)(maxval * 0.38f), keys[testIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
             }
 
-            SetStatus("Pressing #"+keys[testIndex].Index+" "+ keys[testIndex].KeyName+": "+direction);
+            SetStatus("Pressing #"+keys[testIndex].Index+" "+ keys[testIndex].KeyName+": "+direction+" ("+maxval+")");
 
             testJoystickDirection++;
             if (testJoystickDirection > 10)

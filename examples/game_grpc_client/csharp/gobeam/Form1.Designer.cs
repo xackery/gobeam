@@ -209,7 +209,7 @@
             this.btnTestJoystick.Name = "btnTestJoystick";
             this.btnTestJoystick.Size = new System.Drawing.Size(135, 23);
             this.btnTestJoystick.TabIndex = 15;
-            this.btnTestJoystick.Text = "Test Joystick";
+            this.btnTestJoystick.Text = "Detect Joystick";
             this.btnTestJoystick.UseVisualStyleBackColor = true;
             this.btnTestJoystick.Click += new System.EventHandler(this.btnTestJoystick_Click);
             // 
@@ -275,7 +275,7 @@
             // 
             // tmrTestJoystick
             // 
-            this.tmrTestJoystick.Interval = 250;
+            this.tmrTestJoystick.Interval = 500;
             this.tmrTestJoystick.Tick += new System.EventHandler(this.tmrTestJoystick_Tick);
             // 
             // Form1

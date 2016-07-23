@@ -67,7 +67,7 @@ namespace gobeam
                 new KeyBind(7, "CR", "Tactile", "K", 0x4B),
                 new KeyBind(2, "A", "Tactile", "Z", 0x5A),
                 new KeyBind(3, "B", "Tactile", "X", 0x58),
-                new KeyBind(12, "Joy", "Joystick", "1", 1),
+                new KeyBind(0, "Joy", "Joystick", "1", 1),
                 new KeyBind(1, "Enter", "Tactile", "Enter", 0x0D),
             };
             foreach (var key in keys)
@@ -583,9 +583,12 @@ namespace gobeam
 
         private void loadKeysToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            var result = MessageBox.Show("Load new configuration without saving?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+            if (result != DialogResult.Yes) return;
+
             openFileDialog1.Filter = "JSON Files|*.json";
             openFileDialog1.DefaultExt = ".json";
-            var result = openFileDialog1.ShowDialog();
+            result = openFileDialog1.ShowDialog();
             if (result != DialogResult.OK) return;
 
         }
@@ -628,6 +631,22 @@ namespace gobeam
         {
             
            
+        }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Written by Xackery", "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void btnTestgRPC_Click(object sender, EventArgs e)
+        {
+            var prg = new ProgressUpdate();
+            var tac = new ProgressUpdate.Types.TactileUpdate();
+            tac.Id = 0;
+            tac.Fired = true;
+            tac.Progress = 1;
+            prg.Tactile.Add(tac);
+            client.SendProgressUpdate(prg);
         }
     }
 
@@ -672,7 +691,6 @@ namespace gobeam
 
         public void SendProgressUpdate(ProgressUpdate progressUpdate)
         {
-            return;
             try
             {
                 var req = new ProgressUpdateRequest();
@@ -721,13 +739,13 @@ namespace gobeam
                             {    
                                 if (key.Index != touch.Id) continue;
 
-                                if (touch.PressFrequency > 0)
+                                if (touch.Holding > 0 || touch.PressFrequency > 0 || touch.ReleaseFrequency > 0)
                                 {
-                                    Console.WriteLine(touch.Id + ": " + touch.PressFrequency);
+                                    Console.WriteLine(touch.Id + ": " + touch.Holding + ", "+ touch.PressFrequency+ "," + touch.ReleaseFrequency);
                                 }
                                 //Press or release key based on report
                                 if ((touch.PressFrequency != 0 && !key.IsPressed) ||
-                                    (touch.PressFrequency == 0 && key.IsPressed))
+                                    (touch.ReleaseFrequency != 0 && key.IsPressed))
                                 {
                                     key.IsPressed = !key.IsPressed;
                                     Console.WriteLine("KeyPress " + touch.Id + "," + key.IsPressed);
@@ -765,6 +783,7 @@ namespace gobeam
                                     prg.Joystick.Add(ju);
                                     isProgressUpdated = true;                                   
                                 }
+                                //Console.Write(joy.CoordMean.X + "," + joy.CoordMean.Y);
 
                                 if (joy.CoordMean.X == 0 && joy.CoordMean.Y == 0)
                                 {
@@ -791,7 +810,7 @@ namespace gobeam
                                         key.joystick.SetAxis((int)(maxval * ((joy.CoordMean.Y + 1.0f) / 2.0f)), jid, HID_USAGES.HID_USAGE_Y);
                                     }
 
-                                    Console.WriteLine(key.joystick);
+                                   // Console.WriteLine(key.joystick);
                                 }
                                 
                                
@@ -801,7 +820,7 @@ namespace gobeam
 
                         if (isProgressUpdated)
                         {
-                            Console.WriteLine("Progress Update");
+                            //Console.WriteLine("Progress Update");
                             SendProgressUpdate(prg);
                         }
                     }

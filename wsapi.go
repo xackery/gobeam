@@ -215,9 +215,9 @@ func (s *Session) Close() (err error) {
 func (s *Session) listen(wsConn *websocket.Conn, listening <-chan interface{}) {
 	for {
 		messageType, message, err := wsConn.ReadMessage()
-		if s.Debug {
+		/*if s.Debug {
 			fmt.Printf("[%s] New message %d: % x (%d)\n", s.Type, messageType, string(message), len(message))
-		}
+		}*/
 		if err != nil {
 			// Detect if we have been closed manually. If a Close() has already
 			// happened, the websocket we are listening on will be different to the
@@ -350,11 +350,9 @@ func (s *Session) event(messageType int, message []byte) {
 	var e *Event
 
 	if s.Type == "Interactive" {
-		//fmt.Printf("[%s]message length: %d\n", s.Type, len(message))
-		//fmt.Println(message)
-		if s.Debug {
+		/*if s.Debug {
 			fmt.Printf("[%s] Wire messageType %d (%d len)\n", s.Type, messageType, len(message))
-		}
+		}*/
 
 		if len(message) < 1 {
 			if s.Debug {
@@ -370,10 +368,12 @@ func (s *Session) event(messageType int, message []byte) {
 			//fmt.Printf("[%s] handshake ack!\n", s.Type)
 			break
 		case 2: //report
-			if s.Debug {
-				fmt.Printf("[%s] report: % x\n", s.Type, string(message))
-			}
-			if len(message) < 2 {
+			/*
+				if s.Debug {
+					fmt.Printf("[%s] report: % x\n", s.Type, string(message))
+				}
+			*/
+			if len(message) < 5 {
 				return
 			}
 			report := &Report{}
@@ -387,6 +387,9 @@ func (s *Session) event(messageType int, message []byte) {
 		case 3: //error
 			fmt.Printf("[%s] error\n", s.Type)
 			errorResp := &Error{}
+			if len(message) < 5 {
+				return
+			}
 			err = proto.Unmarshal(message[1:], errorResp)
 			if err != nil {
 				fmt.Println("Error unmarshalling error", err.Error())
@@ -630,17 +633,22 @@ func (s *Session) Ping() (err error) {
 
 //A prog event may be sent up periodically at the behest of the Robot. It contains an array of objects for multiple controls on the frontend.
 func (s *Session) ProgressUpdate(prg *ProgressUpdate) (err error) {
-	s.RLock()
-	defer s.RUnlock()
-
-	if s.wsConn == nil {
-		return errors.New("No websocket connection exists.")
+	if prg == nil {
+		err = fmt.Errorf("Empty progress sent")
+		return
 	}
 
+	if s.wsConn == nil {
+		err = fmt.Errorf("No websocket connection exists.")
+		return
+	}
 	if s.Type != "Interactive" {
 		err = fmt.Errorf("Invalid session type, needs to be interactive: %s\n", s.Type)
 		return
 	}
+
+	s.RLock()
+	defer s.RUnlock()
 
 	bhs, err := proto.Marshal(prg)
 	if err != nil {
@@ -659,6 +667,5 @@ func (s *Session) ProgressUpdate(prg *ProgressUpdate) (err error) {
 	if err != nil {
 		return
 	}
-	fmt.Println("Done?")
 	return
 }

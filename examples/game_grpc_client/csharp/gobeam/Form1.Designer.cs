@@ -59,6 +59,7 @@
             this.tmrTestJoystick = new System.Windows.Forms.Timer(this.components);
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.btnTestgRPC = new System.Windows.Forms.Button();
             this.statusStrip.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.grpControls.SuspendLayout();
@@ -72,10 +73,12 @@
             // 
             // txtProcess
             // 
+            this.txtProcess.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.txtProcess.Location = new System.Drawing.Point(187, 29);
             this.txtProcess.Name = "txtProcess";
             this.txtProcess.Size = new System.Drawing.Size(115, 20);
             this.txtProcess.TabIndex = 3;
+            this.txtProcess.Tag = "Which process requires focus in order for keys to press";
             this.txtProcess.Text = "project64";
             // 
             // lblProcess
@@ -85,41 +88,52 @@
             this.lblProcess.Name = "lblProcess";
             this.lblProcess.Size = new System.Drawing.Size(79, 13);
             this.lblProcess.TabIndex = 4;
+            this.lblProcess.Tag = "Which process requires focus in order for keys to press";
             this.lblProcess.Text = "Process Name:";
             // 
             // btnAttach
             // 
+            this.btnAttach.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.btnAttach.Location = new System.Drawing.Point(12, 55);
             this.btnAttach.Name = "btnAttach";
             this.btnAttach.Size = new System.Drawing.Size(290, 23);
             this.btnAttach.TabIndex = 5;
+            this.btnAttach.Tag = "Attach to Process";
             this.btnAttach.Text = "Attach";
             this.btnAttach.UseVisualStyleBackColor = true;
             this.btnAttach.Click += new System.EventHandler(this.btnAttach_Click);
             // 
             // txtAddr
             // 
+            this.txtAddr.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.txtAddr.Location = new System.Drawing.Point(187, 312);
             this.txtAddr.Name = "txtAddr";
             this.txtAddr.Size = new System.Drawing.Size(115, 20);
             this.txtAddr.TabIndex = 6;
+            this.txtAddr.Tag = "What address the gRPC server at";
             this.txtAddr.Text = "127.0.0.1:50051";
             // 
             // lblAddress
             // 
+            this.lblAddress.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblAddress.AutoSize = true;
             this.lblAddress.Location = new System.Drawing.Point(15, 315);
             this.lblAddress.Name = "lblAddress";
-            this.lblAddress.Size = new System.Drawing.Size(48, 13);
+            this.lblAddress.Size = new System.Drawing.Size(79, 13);
             this.lblAddress.TabIndex = 7;
-            this.lblAddress.Text = "Address:";
+            this.lblAddress.Tag = "What address the gRPC server at";
+            this.lblAddress.Text = "gRPC Address:";
             // 
             // btnConnect
             // 
+            this.btnConnect.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.btnConnect.Location = new System.Drawing.Point(12, 338);
             this.btnConnect.Name = "btnConnect";
             this.btnConnect.Size = new System.Drawing.Size(290, 23);
             this.btnConnect.TabIndex = 8;
+            this.btnConnect.Tag = "Connect to gRPC server";
             this.btnConnect.Text = "Connect";
             this.btnConnect.UseVisualStyleBackColor = true;
             this.btnConnect.Click += new System.EventHandler(this.btnConnect_Click);
@@ -202,11 +216,15 @@
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.aboutToolStripMenuItem.Text = "&About";
+            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
             // grpControls
             // 
+            this.grpControls.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.grpControls.Controls.Add(this.btnTestJoystick);
             this.grpControls.Controls.Add(this.btnTestControls);
             this.grpControls.Controls.Add(this.grdControls);
@@ -219,28 +237,35 @@
             // 
             // btnTestJoystick
             // 
+            this.btnTestJoystick.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnTestJoystick.Enabled = false;
             this.btnTestJoystick.Location = new System.Drawing.Point(143, 201);
             this.btnTestJoystick.Name = "btnTestJoystick";
             this.btnTestJoystick.Size = new System.Drawing.Size(135, 23);
             this.btnTestJoystick.TabIndex = 15;
+            this.btnTestJoystick.Tag = "Detect and Test Joystick";
             this.btnTestJoystick.Text = "Detect Joystick";
             this.btnTestJoystick.UseVisualStyleBackColor = true;
             this.btnTestJoystick.Click += new System.EventHandler(this.btnTestJoystick_Click);
             // 
             // btnTestControls
             // 
+            this.btnTestControls.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btnTestControls.Enabled = false;
             this.btnTestControls.Location = new System.Drawing.Point(6, 201);
             this.btnTestControls.Name = "btnTestControls";
             this.btnTestControls.Size = new System.Drawing.Size(131, 23);
             this.btnTestControls.TabIndex = 14;
+            this.btnTestControls.Tag = "Test Pressing Keys";
             this.btnTestControls.Text = "Test Tactile";
             this.btnTestControls.UseVisualStyleBackColor = true;
             this.btnTestControls.Click += new System.EventHandler(this.btnTestControls_Click);
             // 
             // grdControls
             // 
+            this.grdControls.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.grdControls.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.grdControls.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Index,
@@ -249,6 +274,7 @@
             this.Key});
             this.grdControls.Location = new System.Drawing.Point(6, 19);
             this.grdControls.Name = "grdControls";
+            this.grdControls.RowHeadersWidth = 24;
             this.grdControls.Size = new System.Drawing.Size(272, 176);
             this.grdControls.TabIndex = 12;
             this.grdControls.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.grdControls_CellContentClick);
@@ -301,11 +327,22 @@
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
             // 
+            // btnTestgRPC
+            // 
+            this.btnTestgRPC.Location = new System.Drawing.Point(49, 367);
+            this.btnTestgRPC.Name = "btnTestgRPC";
+            this.btnTestgRPC.Size = new System.Drawing.Size(75, 23);
+            this.btnTestgRPC.TabIndex = 14;
+            this.btnTestgRPC.Text = "Test gRPC";
+            this.btnTestgRPC.UseVisualStyleBackColor = true;
+            this.btnTestgRPC.Click += new System.EventHandler(this.btnTestgRPC_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(310, 442);
+            this.Controls.Add(this.btnTestgRPC);
             this.Controls.Add(this.grpControls);
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.menuStrip1);
@@ -362,6 +399,7 @@
         private System.Windows.Forms.ToolStripMenuItem newConfigurationToolStripMenuItem;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
+        private System.Windows.Forms.Button btnTestgRPC;
     }
 }
 

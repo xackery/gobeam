@@ -42,7 +42,7 @@ func main() {
 
 	//Create a robot session, copy auth data from chatbot
 	robot := beam.Session{
-		Debug:        false,
+		Debug:        true,
 		UseCookies:   true,
 		Cookies:      chatbot.Cookies,
 		LoginPayload: chatbot.LoginPayload,
@@ -133,6 +133,13 @@ func (ss *streamSession) reportRobot(s *beam.Session, m *beam.ReportEvent) {
 
 func (rs *robotService) ProgressUpdate(ctx context.Context, req *beam.ProgressUpdateRequest) (resp *beam.ProgressUpdateResponse, err error) {
 	err = rs.session.ProgressUpdate(req.ProgressUpdate)
+	if err != nil {
+		return
+	}
+	if rs.session.Debug {
+		log.Println("[gRPC] ProgressUpdate sent")
+	}
+	resp = &beam.ProgressUpdateResponse{}
 	return
 }
 

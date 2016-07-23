@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.refreshTimer = new System.Windows.Forms.Timer(this.components);
             this.txtProcess = new System.Windows.Forms.TextBox();
             this.lblProcess = new System.Windows.Forms.Label();
@@ -40,6 +41,7 @@
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadKeymapJSONToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadKeysToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveConfigurationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -150,6 +152,7 @@
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.loadKeymapJSONToolStripMenuItem,
             this.loadKeysToolStripMenuItem,
             this.saveConfigurationToolStripMenuItem,
             this.exitToolStripMenuItem});
@@ -157,23 +160,31 @@
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "&File";
             // 
+            // loadKeymapJSONToolStripMenuItem
+            // 
+            this.loadKeymapJSONToolStripMenuItem.Name = "loadKeymapJSONToolStripMenuItem";
+            this.loadKeymapJSONToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
+            this.loadKeymapJSONToolStripMenuItem.Text = "Load Keymap &JSON";
+            // 
             // loadKeysToolStripMenuItem
             // 
             this.loadKeysToolStripMenuItem.Name = "loadKeysToolStripMenuItem";
-            this.loadKeysToolStripMenuItem.Size = new System.Drawing.Size(175, 22);
-            this.loadKeysToolStripMenuItem.Text = "&Load Keys...";
+            this.loadKeysToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
+            this.loadKeysToolStripMenuItem.Text = "&Load Configuration...";
             // 
             // saveConfigurationToolStripMenuItem
             // 
             this.saveConfigurationToolStripMenuItem.Name = "saveConfigurationToolStripMenuItem";
-            this.saveConfigurationToolStripMenuItem.Size = new System.Drawing.Size(175, 22);
-            this.saveConfigurationToolStripMenuItem.Text = "&Save Configuration";
+            this.saveConfigurationToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
+            this.saveConfigurationToolStripMenuItem.Text = "&Save Configuration...";
+            this.saveConfigurationToolStripMenuItem.Click += new System.EventHandler(this.saveConfigurationToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(175, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
             this.exitToolStripMenuItem.Text = "E&xit";
+            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -292,6 +303,7 @@
             this.Controls.Add(this.btnAttach);
             this.Controls.Add(this.lblProcess);
             this.Controls.Add(this.txtProcess);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "Form1";
             this.Text = "GoBeam Client";
@@ -335,6 +347,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Key;
         private System.Windows.Forms.Button btnTestJoystick;
         private System.Windows.Forms.Timer tmrTestJoystick;
+        private System.Windows.Forms.ToolStripMenuItem loadKeymapJSONToolStripMenuItem;
     }
 }
 

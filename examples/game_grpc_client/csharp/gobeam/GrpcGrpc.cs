@@ -8,12 +8,17 @@ using System.Threading.Tasks;
 using Grpc.Core;
 
 namespace Gobeam {
+  /// <summary>
+  /// Handles streaming reports via gRPC
+  /// </summary>
   public static class RobotService
   {
     static readonly string __ServiceName = "gobeam.RobotService";
 
     static readonly Marshaller<global::Gobeam.StreamRequest> __Marshaller_StreamRequest = Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Gobeam.StreamRequest.Parser.ParseFrom);
     static readonly Marshaller<global::Gobeam.Report> __Marshaller_Report = Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Gobeam.Report.Parser.ParseFrom);
+    static readonly Marshaller<global::Gobeam.ProgressUpdateRequest> __Marshaller_ProgressUpdateRequest = Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Gobeam.ProgressUpdateRequest.Parser.ParseFrom);
+    static readonly Marshaller<global::Gobeam.ProgressUpdateResponse> __Marshaller_ProgressUpdateResponse = Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Gobeam.ProgressUpdateResponse.Parser.ParseFrom);
 
     static readonly Method<global::Gobeam.StreamRequest, global::Gobeam.Report> __Method_StreamReport = new Method<global::Gobeam.StreamRequest, global::Gobeam.Report>(
         MethodType.ServerStreaming,
@@ -21,6 +26,13 @@ namespace Gobeam {
         "StreamReport",
         __Marshaller_StreamRequest,
         __Marshaller_Report);
+
+    static readonly Method<global::Gobeam.ProgressUpdateRequest, global::Gobeam.ProgressUpdateResponse> __Method_ProgressUpdate = new Method<global::Gobeam.ProgressUpdateRequest, global::Gobeam.ProgressUpdateResponse>(
+        MethodType.Unary,
+        __ServiceName,
+        "ProgressUpdate",
+        __Marshaller_ProgressUpdateRequest,
+        __Marshaller_ProgressUpdateResponse);
 
     /// <summary>Service descriptor</summary>
     public static global::Google.Protobuf.Reflection.ServiceDescriptor Descriptor
@@ -32,6 +44,11 @@ namespace Gobeam {
     public abstract class RobotServiceBase
     {
       public virtual global::System.Threading.Tasks.Task StreamReport(global::Gobeam.StreamRequest request, IServerStreamWriter<global::Gobeam.Report> responseStream, ServerCallContext context)
+      {
+        throw new RpcException(new Status(StatusCode.Unimplemented, ""));
+      }
+
+      public virtual global::System.Threading.Tasks.Task<global::Gobeam.ProgressUpdateResponse> ProgressUpdate(global::Gobeam.ProgressUpdateRequest request, ServerCallContext context)
       {
         throw new RpcException(new Status(StatusCode.Unimplemented, ""));
       }
@@ -69,6 +86,22 @@ namespace Gobeam {
       {
         return CallInvoker.AsyncServerStreamingCall(__Method_StreamReport, null, options, request);
       }
+      public virtual global::Gobeam.ProgressUpdateResponse ProgressUpdate(global::Gobeam.ProgressUpdateRequest request, Metadata headers = null, DateTime? deadline = null, CancellationToken cancellationToken = default(CancellationToken))
+      {
+        return ProgressUpdate(request, new CallOptions(headers, deadline, cancellationToken));
+      }
+      public virtual global::Gobeam.ProgressUpdateResponse ProgressUpdate(global::Gobeam.ProgressUpdateRequest request, CallOptions options)
+      {
+        return CallInvoker.BlockingUnaryCall(__Method_ProgressUpdate, null, options, request);
+      }
+      public virtual AsyncUnaryCall<global::Gobeam.ProgressUpdateResponse> ProgressUpdateAsync(global::Gobeam.ProgressUpdateRequest request, Metadata headers = null, DateTime? deadline = null, CancellationToken cancellationToken = default(CancellationToken))
+      {
+        return ProgressUpdateAsync(request, new CallOptions(headers, deadline, cancellationToken));
+      }
+      public virtual AsyncUnaryCall<global::Gobeam.ProgressUpdateResponse> ProgressUpdateAsync(global::Gobeam.ProgressUpdateRequest request, CallOptions options)
+      {
+        return CallInvoker.AsyncUnaryCall(__Method_ProgressUpdate, null, options, request);
+      }
       protected override RobotServiceClient NewInstance(ClientBaseConfiguration configuration)
       {
         return new RobotServiceClient(configuration);
@@ -79,7 +112,8 @@ namespace Gobeam {
     public static ServerServiceDefinition BindService(RobotServiceBase serviceImpl)
     {
       return ServerServiceDefinition.CreateBuilder()
-          .AddMethod(__Method_StreamReport, serviceImpl.StreamReport).Build();
+          .AddMethod(__Method_StreamReport, serviceImpl.StreamReport)
+          .AddMethod(__Method_ProgressUpdate, serviceImpl.ProgressUpdate).Build();
     }
 
   }

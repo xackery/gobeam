@@ -12,7 +12,7 @@ service RobotService {
 message StreamRequest {}
 
 message ProgressUpdateRequest{
-	ProgressUpdate ProgressUpdate = 1
+	ProgressUpdate ProgressUpdate = 1;
 }
 
 message ProgressUpdateResponse{}

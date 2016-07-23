@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	beam "github.com/xackery/gobeam"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -22,7 +23,7 @@ type streamSession struct {
 func main() {
 	//Create a chatbot session.
 	chatbot := beam.Session{
-		Debug:      true,
+		Debug:      false,
 		UseCookies: true,
 	}
 
@@ -41,7 +42,7 @@ func main() {
 
 	//Create a robot session, copy auth data from chatbot
 	robot := beam.Session{
-		Debug:        true,
+		Debug:        false,
 		UseCookies:   true,
 		Cookies:      chatbot.Cookies,
 		LoginPayload: chatbot.LoginPayload,
@@ -84,11 +85,11 @@ func main() {
 	}
 	s := grpc.NewServer()
 	beam.RegisterRobotServiceServer(s, rs)
-	s.Serve(lis)
-
-	// Simple way to keep program running until any key press.
-	var input string
-	fmt.Scanln(&input)
+	err = s.Serve(lis)
+	if err != nil {
+		log.Println("[gRPC] Error on serve: ", err.Error())
+		return
+	}
 	return
 }
 
@@ -130,15 +131,15 @@ func (ss *streamSession) reportRobot(s *beam.Session, m *beam.ReportEvent) {
 	ss.reportChan <- m.Report
 }
 
-func (rs *robotService) ProgressUpdate(req *beam.ProgressUpdateRequest) (resp *beam.ProgressUpdateResponse, err error) {
-	err = rs.ProgressUpdate(req.ProgressUpdate)
+func (rs *robotService) ProgressUpdate(ctx context.Context, req *beam.ProgressUpdateRequest) (resp *beam.ProgressUpdateResponse, err error) {
+	err = rs.session.ProgressUpdate(req.ProgressUpdate)
 	return
 }
 
 //Stream the report output to a connected RPC client
 func (rs *robotService) StreamReport(req *beam.StreamRequest, stream beam.RobotService_StreamReportServer) (err error) {
 
-	fmt.Println("[gRPC] Client connected")
+	log.Println("[gRPC] Client connected")
 	//Create a stream session
 	ss := &streamSession{
 		reportChan: make(chan *beam.Report, 10),

@@ -154,8 +154,8 @@ func (s *Session) OpenRobot() (err error) {
 	}
 
 	hs := &Handshake{
-		Channel:   &s.LoginPayload.Channel.ID,
-		StreamKey: &s.authKey,
+		Channel:   s.LoginPayload.Channel.ID,
+		StreamKey: s.authKey,
 	}
 
 	bhs, err := proto.Marshal(hs)

@@ -5,7 +5,14 @@ package gobeam;
 //Handles streaming reports via gRPC
 service RobotService {
 	rpc StreamReport (StreamRequest) returns (stream Report) {}
+	rpc ProgressUpdate (ProgressUpdateRequest) returns (ProgressUpdateResponse) {}
 }
 
 //Used by RobotService StreamReport
 message StreamRequest {}
+
+message ProgressUpdateRequest{
+	ProgressUpdate ProgressUpdate = 1
+}
+
+message ProgressUpdateResponse{}

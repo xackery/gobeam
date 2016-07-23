@@ -56,6 +56,7 @@ func (s *Session) request(method, urlStr, contentType string, b []byte) (respons
 		req.Header.Set("authorization", s.Token)
 	}
 
+	req.Header.Set("X-Csrf-Token", s.CsrfToken)
 	req.Header.Set("Content-Type", contentType)
 	// TODO: Make a configurable static variable.
 	req.Header.Set("User-Agent", fmt.Sprintf("GoBeamBot (https://github.com/xackery/gobeam, v%s)", VERSION))
@@ -83,6 +84,8 @@ func (s *Session) request(method, urlStr, contentType string, b []byte) (respons
 	if err != nil {
 		return
 	}
+
+	s.CsrfToken = resp.Header.Get("X-Csrf-Token")
 
 	if s.Debug {
 

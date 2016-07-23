@@ -100,6 +100,7 @@ type Session struct {
 	authKey      string //ws authkey
 	LoginPayload *LoginPayload
 	config       *GoBeamConfig
+	CsrfToken    string
 	// General configurable settings.
 
 	// Authentication token for this session

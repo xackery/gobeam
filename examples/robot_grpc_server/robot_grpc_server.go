@@ -42,7 +42,7 @@ func main() {
 
 	//Create a robot session, copy auth data from chatbot
 	robot := beam.Session{
-		Debug:        true,
+		Debug:        false,
 		UseCookies:   true,
 		Cookies:      chatbot.Cookies,
 		LoginPayload: chatbot.LoginPayload,

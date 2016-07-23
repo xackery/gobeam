@@ -54,6 +54,9 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>gobeam_sm_5T0_icon.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Google.Protobuf, Version=3.0.0.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
       <HintPath>packages\Google.Protobuf.3.0.0-beta3\lib\dotnet\Google.Protobuf.dll</HintPath>
@@ -97,6 +100,12 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormJsonLoader.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormJsonLoader.Designer.cs">
+      <DependentUpon>FormJsonLoader.cs</DependentUpon>
+    </Compile>
     <Compile Include="Grpc.cs" />
     <Compile Include="GrpcGrpc.cs" />
     <Compile Include="InputKey.cs">
@@ -111,6 +120,9 @@
     <Compile Include="w32.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormJsonLoader.resx">
+      <DependentUpon>FormJsonLoader.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="InputKey.resx">
       <DependentUpon>InputKey.cs</DependentUpon>
@@ -140,6 +152,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="FodyWeavers.xml" />
+    <Content Include="gobeam_sm_5T0_icon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="packages\Grpc.Core.0.15.0\build\net45\Grpc.Core.targets" Condition="Exists('packages\Grpc.Core.0.15.0\build\net45\Grpc.Core.targets')" />

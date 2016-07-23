@@ -23,9 +23,6 @@ namespace gobeam
     public partial class Form1 : Form
     {        
 
-        //Create a key binding list
-        public KeyBind[] keys = { };
-
         public IntPtr processHandleWindow;
         IntPtr handle;
         private Process sourceProcess;
@@ -50,29 +47,24 @@ namespace gobeam
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            Text = "GoBeam v" + Application.ProductVersion;
+            //var js = "{\"reportInterval\":50,\"tactiles\":[{\"id\":0,\"type\":\"tactiles\",\"blueprint\":[{\"width\":1,\"height\":1,\"grid\":\"large\",\"state\":\"default\",\"x\":7,\"y\":0},{\"width\":1,\"height\":1,\"grid\":\"small\",\"state\":\"default\",\"x\":1,\"y\":2},{\"width\":1,\"height\":1,\"grid\":\"medium\",\"state\":\"default\",\"x\":3,\"y\":0}],\"analysis\":{\"holding\":true,\"frequency\":true},\"cost\":{\"press\":{\"cost\":0}},\"cooldown\":{\"press\":0},\"text\":\"Left\",\"key\":81,\"help\":\"Left Paddle\"},{\"id\":1,\"type\":\"tactiles\",\"blueprint\":[{\"width\":1,\"height\":1,\"grid\":\"large\",\"state\":\"default\",\"x\":8,\"y\":0},{\"width\":1,\"height\":1,\"grid\":\"medium\",\"state\":\"default\",\"x\":5,\"y\":0},{\"width\":1,\"height\":1,\"grid\":\"small\",\"state\":\"default\",\"x\":5,\"y\":0}],\"analysis\":{\"holding\":true,\"frequency\":true},\"key\":87,\"text\":\"Right\",\"help\":\"Right Paddle\",\"cost\":{\"press\":{\"cost\":0}},\"cooldown\":{\"press\":0}}],\"joysticks\":[],\"screens\":[]}";
+            //BeamJson beamJson = Newtonsoft.Json.JsonConvert.DeserializeObject<BeamJson>(js);
+
             instance = this;
             String strAppDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);
 
             openFileDialog1.InitialDirectory = strAppDir;
-            saveFileDialog1.InitialDirectory = strAppDir;
+            saveFileDialog1.InitialDirectory = strAppDir;            
+        }
 
-            keys = new KeyBind[]{
-                new KeyBind(8, "W", "Tactile", "W", 0x57),
-                new KeyBind(9, "A", "Tactile", "A", 0x41),
-                new KeyBind(11, "D", "Tactile", "D", 0x44),
-                new KeyBind(10, "S", "Tactile", "S", 0x53),
-                new KeyBind(4, "CU", "Tactile", "U", 0x55),
-                new KeyBind(5, "CL", "Tactile", "H", 0x48),
-                new KeyBind(6, "CD", "Tactile", "J", 0x4A),
-                new KeyBind(7, "CR", "Tactile", "K", 0x4B),
-                new KeyBind(2, "A", "Tactile", "Z", 0x5A),
-                new KeyBind(3, "B", "Tactile", "X", 0x58),
-                new KeyBind(0, "Joy", "Joystick", "1", 1),
-                new KeyBind(1, "Enter", "Tactile", "Enter", 0x0D),
-            };
-            foreach (var key in keys)
+        public static void RebuildKeys(KeyBind[] newKeys)
+        {
+            config.keys = newKeys;
+            GetInstance().grdControls.Rows.Clear();
+            foreach (var key in newKeys)
             {
-                grdControls.Rows.Add(key.Index, key.Label, key.Type, key.KeyName);
+                GetInstance().grdControls.Rows.Add(key.Index, key.Label, key.Type, key.KeyName);
             }
             
         }
@@ -108,7 +100,7 @@ namespace gobeam
             processHandleWindow = processes[0].MainWindowHandle;
             txtProcess.Enabled = false;
             btnAttach.Text = "Detach";
-            this.Text = "GoBeam [" + txtProcess.Text + "]";
+            Text = "["+txtProcess.Text+"] GoBeam v" + Application.ProductVersion;            
             btnTestControls.Enabled = true;
             btnTestJoystick.Enabled = true;
             lblStatus.Text = "Attached to " + txtProcess.Text + ".";
@@ -119,7 +111,7 @@ namespace gobeam
         {
             handle = IntPtr.Zero;
             processHandleWindow = IntPtr.Zero;
-            this.Text = "GoBeam Client";
+            Text = "GoBeam v" + Application.ProductVersion;
             txtProcess.Enabled = true;
             btnAttach.Text = "Attach";
             btnAttach.Enabled = true;
@@ -173,6 +165,27 @@ namespace gobeam
 
         private void btnConnect_Click(object sender, EventArgs e)
         {
+            if (config == null || config.keys == null || config.keys.Length < 1)
+            {
+                MessageBox.Show("First load a key config before connecting.", "No keys are mapped", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            bool hasJoystick = false;
+            foreach (var key in config.keys)
+            {
+                if (key.Type == "Joystick")
+                {
+                    hasJoystick = true;
+                    break;
+                }
+            }
+            if (hasJoystick && btnTestJoystick.Text == "Detect Joystick")
+            {
+                MessageBox.Show("There are uninitialized joysticks. Press Detect Joystick before connecting.", "Joysticks uninitialized.", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             if (client != null && channel != null)
             {
                 DisconnectRPC();
@@ -241,6 +254,7 @@ namespace gobeam
             }
 
             //Release any previously pressed keys
+            var keys = config.keys;
             if (testKeyDown)
             {
                 SetStatus("Releasing key " + keys[testIndex - 1].KeyName);
@@ -272,6 +286,7 @@ namespace gobeam
         InputKey inputKey;
         private void grdControls_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
+            if (grdControls.Rows[e.RowIndex] == null || grdControls.Rows[e.RowIndex].Cells[2] == null || grdControls.Rows[e.RowIndex].Cells[2].Value == null) return;
             if (grdControls.Rows[e.RowIndex].Cells[2].Value.ToString() == "Joystick")
             {
                 string id = Microsoft.VisualBasic.Interaction.InputBox("Joystick ID", "Enter Joystick ID # (1 is default)", "1");
@@ -281,7 +296,7 @@ namespace gobeam
                     return;
                 }
                 bool isFound = false;
-                foreach (var key in keys)
+                foreach (var key in config.keys)
                 {
                     if (key.Index == (int)grdControls.Rows[e.RowIndex].Cells[0].Value)
                     {
@@ -301,7 +316,7 @@ namespace gobeam
             }
 
             lastKeyIndex = -1;
-            foreach (var key in keys)
+            foreach (var key in config.keys)
             {
                 if (key.Index == (int)grdControls.Rows[e.RowIndex].Cells[0].Value)
                 {
@@ -321,19 +336,19 @@ namespace gobeam
 
         int lastKeyIndex;
         public void SetFocusedKey(string label, byte key)
-        {
+        {            
             for (var i = 0; i < grdControls.Rows.Count - 1; i++)
             {
                 var row = grdControls.Rows[i];
                 if (row.Cells[0].Value.ToString() == lastKeyIndex.ToString())
                 {
                     row.Cells[3].Value = label;
-                    for (var j = 0; j < keys.Count(); j++)
+                    for (var j = 0; j < config.keys.Count(); j++)
                     {
-                        if (keys[j].Index == lastKeyIndex)
+                        if (config.keys[j].Index == lastKeyIndex)
                         {
-                            keys[j].KeyName = label;
-                            keys[j].KeyCode = key;
+                            config.keys[j].KeyName = label;
+                            config.keys[j].KeyCode = key;
                             return;
                         }
                     }
@@ -348,7 +363,7 @@ namespace gobeam
 
             if (btnTestJoystick.Text == "Detect Joystick")
             {
-                foreach (var key in keys)
+                foreach (var key in config.keys)
                 {
                     UInt32 id = key.KeyCode;
                     if (key.Type != "Joystick") continue;
@@ -476,15 +491,15 @@ namespace gobeam
                 return;
             }
             
-            if (keys[testJoystickIndex].Type != "Joystick")
+            if (config.keys[testJoystickIndex].Type != "Joystick")
             {
-                SetStatus("Skipping #" + keys[testJoystickIndex].Index + " " + keys[testJoystickIndex].KeyName + " (Not joystick)");
+                SetStatus("Skipping #" + config.keys[testJoystickIndex].Index + " " + config.keys[testJoystickIndex].KeyName + " (Not joystick)");
                 testJoystickIndex++;
                 return;
             }            
             string direction = "";
-            UInt32 id = keys[testJoystickIndex].KeyCode;
-            var joystick = keys[testJoystickIndex].joystick;
+            UInt32 id = config.keys[testJoystickIndex].KeyCode;
+            var joystick = config.keys[testJoystickIndex].joystick;
             //Get max value
             long maxval = 0;            
             joystick.GetVJDAxisMax(id, HID_USAGES.HID_USAGE_X, ref maxval);
@@ -494,60 +509,60 @@ namespace gobeam
             if (testJoystickDirection == 0)
             {
                 direction = "100% up";
-                joystick.SetAxis((int)maxval, keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
+                joystick.SetAxis((int)maxval, config.keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
             }
             if (testJoystickDirection == 1)
             {
                 direction = "100% down";
-                joystick.SetAxis(0, keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
+                joystick.SetAxis(0, config.keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
             }
 
             if (testJoystickDirection == 2)
             {
                 direction = "50% up";
                 Console.Write(" Y: " + maxval + "," + (int)(maxval * 0.75f));
-                joystick.SetAxis((int)(maxval*0.75f), keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
+                joystick.SetAxis((int)(maxval*0.75f), config.keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
             }
             if (testJoystickDirection == 3)
             {
                 direction = "50% down";
-                joystick.SetAxis((int)(maxval * 0.25f), keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
+                joystick.SetAxis((int)(maxval * 0.25f), config.keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
             }
 
             if (testJoystickDirection == 4)
             {
                 direction = "100% right";
-                joystick.SetAxis((int)(maxval * 1f), keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_X);
+                joystick.SetAxis((int)(maxval * 1f), config.keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_X);
             }
             if (testJoystickDirection == 5)
             {
                 direction = "100% left";
-                joystick.SetAxis((int)(maxval * 0f), keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_X);
+                joystick.SetAxis((int)(maxval * 0f), config.keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_X);
             }
             if (testJoystickDirection == 6)
             {
                 direction = "50% right";
-                joystick.SetAxis((int)(maxval * 0.75f), keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_X);
+                joystick.SetAxis((int)(maxval * 0.75f), config.keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_X);
             }
             if (testJoystickDirection == 7)
             {
                 direction = "50% left";
-                joystick.SetAxis((int)(maxval * 0.25f), keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_X);
+                joystick.SetAxis((int)(maxval * 0.25f), config.keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_X);
             }
             if (testJoystickDirection == 8)
             {
                 direction = "25% down-right";
-                joystick.SetAxis((int)(maxval * 0.62f), keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_X);
-                joystick.SetAxis((int)(maxval * 0.62f), keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
+                joystick.SetAxis((int)(maxval * 0.62f), config.keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_X);
+                joystick.SetAxis((int)(maxval * 0.62f), config.keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
             }
             if (testJoystickDirection == 9)
             {
                 direction = "25% up-left";
-                joystick.SetAxis((int)(maxval * 0.38f), keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_X);
-                joystick.SetAxis((int)(maxval * 0.38f), keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
+                joystick.SetAxis((int)(maxval * 0.38f), config.keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_X);
+                joystick.SetAxis((int)(maxval * 0.38f), config.keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
             }
 
-            SetStatus("Pressing #"+keys[testJoystickIndex].Index+" "+ keys[testJoystickIndex].KeyName+": "+direction+" ("+maxval+")");
+            SetStatus("Pressing #"+ config.keys[testJoystickIndex].Index+" "+ config.keys[testJoystickIndex].KeyName+": "+direction+" ("+maxval+")");
             Console.WriteLine(joystick);
             testJoystickDirection++;
             if (testJoystickDirection > 10)
@@ -564,13 +579,18 @@ namespace gobeam
         }
 
         private void saveConfigurationToolStripMenuItem_Click(object sender, EventArgs e)
-        {
+        {           
             saveFileDialog1.Filter = "JSON Files|*.json";
             saveFileDialog1.DefaultExt = ".json";
             saveFileDialog1.CreatePrompt = false;
             saveFileDialog1.OverwritePrompt = true;
             var result = saveFileDialog1.ShowDialog();
             if (result != DialogResult.OK) return;
+
+            //update config with form changes
+            config.processName = txtProcess.Text;
+            config.grpcAddress = txtAddr.Text;
+
             try
             {
                 File.WriteAllText(Path.GetFullPath(saveFileDialog1.FileName), JsonConvert.SerializeObject(config, Formatting.Indented));
@@ -581,16 +601,52 @@ namespace gobeam
             }
         }
 
+        public string GetProcessName()
+        {
+            return txtProcess.Text;
+        }
+
         private void loadKeysToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var result = MessageBox.Show("Load new configuration without saving?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-            if (result != DialogResult.Yes) return;
+            if (btnAttach.Text == "Detach")
+            {
+                MessageBox.Show("First Detach from Process before loading a config", "Detach First!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            if (btnConnect.Text == "Disconnect")
+            {
+                MessageBox.Show("First Disconnect from gRPC before loading a config", "Disconnect First!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            DialogResult result;
+            if (config != null && config.keys != null && config.keys.Length > 0)
+            {
+                result = MessageBox.Show("Clear key settings without saving?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (result != DialogResult.Yes) return;
+            }
 
             openFileDialog1.Filter = "JSON Files|*.json";
             openFileDialog1.DefaultExt = ".json";
             result = openFileDialog1.ShowDialog();
             if (result != DialogResult.OK) return;
-
+            try
+            {               
+                var newConfig = JsonConvert.DeserializeObject<Config>(File.ReadAllText(Path.GetFullPath(openFileDialog1.FileName)));
+                if (newConfig == null)
+                {
+                    MessageBox.Show("Config failed to load.", "Failed to load", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                config = newConfig;
+                RebuildKeys(config.keys);
+                txtAddr.Text = config.grpcAddress;
+                txtProcess.Text = config.processName;
+                SetStatus(Path.GetFileName(openFileDialog1.FileName) + " loaded.");
+            }
+            catch (Exception err)
+            {
+                MessageBox.Show(err.Message, "Failed to load", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            }
         }
 
         private void LoadConfig(string path, bool isResetOnFail)
@@ -600,7 +656,7 @@ namespace gobeam
                 config = Newtonsoft.Json.JsonConvert.DeserializeObject<Config>(File.ReadAllText(@"poetionbot.ini"));
             }
             catch (System.IO.FileNotFoundException)
-            {
+            {                
                 MessageBox.Show("Could not find file: " + path, "File not found", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             
@@ -609,8 +665,11 @@ namespace gobeam
 
         private void ResetDefaults()
         {
-            var result = MessageBox.Show("Clear all settings without saving?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-            if (result != DialogResult.Yes) return;
+            if (config != null && config.keys != null && config.keys.Length > 0)
+            {
+                var result = MessageBox.Show("Clear key settings without saving?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (result != DialogResult.Yes) return;
+            }            
 
             //Make sure disconnected
             DisconnectRPC();
@@ -624,7 +683,20 @@ namespace gobeam
 
         private void newConfigurationToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (btnAttach.Text == "Detach")
+            {
+                MessageBox.Show("First Detach from Process before loading a config", "Detach First!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            if (btnConnect.Text == "Disconnect")
+            {
+                MessageBox.Show("First Disconnect from gRPC before loading a config", "Disconnect First!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
             ResetDefaults();
+            Hide();
+            var js = new FormJsonLoader();
+            js.Show();
         }
 
         private void saveFileDialog1_FileOk(object sender, CancelEventArgs e)
@@ -635,7 +707,7 @@ namespace gobeam
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Written by Xackery", "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("Written by Xackery", "Version "+Application.ProductVersion, MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void btnTestgRPC_Click(object sender, EventArgs e)
@@ -647,6 +719,11 @@ namespace gobeam
             tac.Progress = 1;
             prg.Tactile.Add(tac);
             client.SendProgressUpdate(prg);
+        }
+
+        private void txtProcess_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 
@@ -725,14 +802,16 @@ namespace gobeam
                         //Console.WriteLine(report);
                         if (Form1.GetInstance().processHandleWindow != w32.GetForegroundWindow())
                         {
+                            Form1.GetInstance().Text = "[" + Form1.GetInstance().GetProcessName() + "] GoBeam v" + Application.ProductVersion;
                             //Form1.GetInstance().SetStatus("Window not visible");
                             continue;
                         } else
                         {
+                            Form1.GetInstance().Text = ">[" + Form1.GetInstance().GetProcessName() + "]< GoBeam v" + Application.ProductVersion;
                             //Form1.GetInstance().SetStatus("");
                         }
                         //iterate keymap
-                        foreach (var key in Form1.GetInstance().keys)
+                        foreach (var key in Form1.config.keys)
                         {
                             //iterate touches
                             foreach (var touch in report.Tactile)

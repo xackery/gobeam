@@ -23,7 +23,7 @@ func (c *GoBeamConfig) Load(path string) (err error) {
 	if fi == nil {
 		//write an empty file, since it doesn't exist
 		for {
-			fmt.Printf("Username: ")
+			fmt.Printf("Beam.pro Username: ")
 			_, err = fmt.Scanln(&c.Username)
 			if len(c.Username) < 3 {
 				fmt.Println("Username must be greater than 3 characters")
@@ -35,8 +35,9 @@ func (c *GoBeamConfig) Load(path string) (err error) {
 			}
 			break
 		}
+		fmt.Println("**Warning: Password is cleartext, do not stream this step**")
 		for {
-			fmt.Printf("Password: ")
+			fmt.Printf("Beam.pro Password: ")
 			_, err = fmt.Scanln(&c.Password)
 			if len(c.Password) < 3 {
 				fmt.Println("Password must be greater than 3 characters")
@@ -48,8 +49,12 @@ func (c *GoBeamConfig) Load(path string) (err error) {
 			}
 			break
 		}
-		fmt.Println("Saved credentials to", path)
 		err = c.Save(path)
+		if err != nil {
+			return
+		}
+		fmt.Println("Saved credentials to", path)
+		fmt.Println("** IT IS RECOMMENDED TO EXIT, CLEAR SCREEN, RESTART THIS TO HIDE PASSWORD **")
 		return
 	}
 

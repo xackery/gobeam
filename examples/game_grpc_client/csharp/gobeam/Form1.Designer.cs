@@ -41,7 +41,7 @@
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.loadKeymapJSONToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.newConfigurationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadKeysToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveConfigurationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -57,6 +57,8 @@
             this.Key = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tmrTestControls = new System.Windows.Forms.Timer(this.components);
             this.tmrTestJoystick = new System.Windows.Forms.Timer(this.components);
+            this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.statusStrip.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.grpControls.SuspendLayout();
@@ -152,7 +154,7 @@
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.loadKeymapJSONToolStripMenuItem,
+            this.newConfigurationToolStripMenuItem,
             this.loadKeysToolStripMenuItem,
             this.saveConfigurationToolStripMenuItem,
             this.exitToolStripMenuItem});
@@ -160,17 +162,19 @@
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "&File";
             // 
-            // loadKeymapJSONToolStripMenuItem
+            // newConfigurationToolStripMenuItem
             // 
-            this.loadKeymapJSONToolStripMenuItem.Name = "loadKeymapJSONToolStripMenuItem";
-            this.loadKeymapJSONToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
-            this.loadKeymapJSONToolStripMenuItem.Text = "Load Keymap &JSON";
+            this.newConfigurationToolStripMenuItem.Name = "newConfigurationToolStripMenuItem";
+            this.newConfigurationToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
+            this.newConfigurationToolStripMenuItem.Text = "&New Configuration";
+            this.newConfigurationToolStripMenuItem.Click += new System.EventHandler(this.newConfigurationToolStripMenuItem_Click);
             // 
             // loadKeysToolStripMenuItem
             // 
             this.loadKeysToolStripMenuItem.Name = "loadKeysToolStripMenuItem";
             this.loadKeysToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
             this.loadKeysToolStripMenuItem.Text = "&Load Configuration...";
+            this.loadKeysToolStripMenuItem.Click += new System.EventHandler(this.loadKeysToolStripMenuItem_Click);
             // 
             // saveConfigurationToolStripMenuItem
             // 
@@ -289,6 +293,14 @@
             this.tmrTestJoystick.Interval = 500;
             this.tmrTestJoystick.Tick += new System.EventHandler(this.tmrTestJoystick_Tick);
             // 
+            // saveFileDialog1
+            // 
+            this.saveFileDialog1.FileOk += new System.ComponentModel.CancelEventHandler(this.saveFileDialog1_FileOk);
+            // 
+            // openFileDialog1
+            // 
+            this.openFileDialog1.FileName = "openFileDialog1";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -347,7 +359,9 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Key;
         private System.Windows.Forms.Button btnTestJoystick;
         private System.Windows.Forms.Timer tmrTestJoystick;
-        private System.Windows.Forms.ToolStripMenuItem loadKeymapJSONToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem newConfigurationToolStripMenuItem;
+        private System.Windows.Forms.SaveFileDialog saveFileDialog1;
+        private System.Windows.Forms.OpenFileDialog openFileDialog1;
     }
 }
 

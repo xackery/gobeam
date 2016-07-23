@@ -13,6 +13,9 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Threading;
 using vJoyInterfaceWrap;
+using System.IO;
+using Newtonsoft.Json;
+using System.Reflection;
 
 namespace gobeam
 {
@@ -32,6 +35,8 @@ namespace gobeam
         private Channel channel;
         private RobotServiceClient client;
 
+        public static Config config;
+
         public Form1()
         {
             InitializeComponent();
@@ -46,6 +51,11 @@ namespace gobeam
         private void Form1_Load(object sender, EventArgs e)
         {
             instance = this;
+            String strAppDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);
+
+            openFileDialog1.InitialDirectory = strAppDir;
+            saveFileDialog1.InitialDirectory = strAppDir;
+
             keys = new KeyBind[]{
                 new KeyBind(8, "W", "Tactile", "W", 0x57),
                 new KeyBind(9, "A", "Tactile", "A", 0x41),
@@ -114,6 +124,9 @@ namespace gobeam
             btnAttach.Text = "Attach";
             btnAttach.Enabled = true;
             btnTestControls.Enabled = false;
+            btnTestJoystick.Enabled = false;
+            btnTestJoystick.Text = "Detect Joystick";
+            btnTestControls.Text = "Test Controls";
             lblStatus.Text = "Detached from " + txtProcess.Text + ".";
         }
 
@@ -552,7 +565,69 @@ namespace gobeam
 
         private void saveConfigurationToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            saveFileDialog1.Filter = "JSON Files|*.json";
+            saveFileDialog1.DefaultExt = ".json";
+            saveFileDialog1.CreatePrompt = false;
+            saveFileDialog1.OverwritePrompt = true;
+            var result = saveFileDialog1.ShowDialog();
+            if (result != DialogResult.OK) return;
+            try
+            {
+                File.WriteAllText(Path.GetFullPath(saveFileDialog1.FileName), JsonConvert.SerializeObject(config, Formatting.Indented));
+                SetStatus(Path.GetFileName(saveFileDialog1.FileName) + " saved.");
+            } catch (Exception err)
+            {
+                MessageBox.Show(err.Message, "Failed to save", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            }
+        }
+
+        private void loadKeysToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            openFileDialog1.Filter = "JSON Files|*.json";
+            openFileDialog1.DefaultExt = ".json";
+            var result = openFileDialog1.ShowDialog();
+            if (result != DialogResult.OK) return;
+
+        }
+
+        private void LoadConfig(string path, bool isResetOnFail)
+        {
+            try
+            {
+                config = Newtonsoft.Json.JsonConvert.DeserializeObject<Config>(File.ReadAllText(@"poetionbot.ini"));
+            }
+            catch (System.IO.FileNotFoundException)
+            {
+                MessageBox.Show("Could not find file: " + path, "File not found", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
             
+            if (config == null && isResetOnFail) ResetDefaults();
+        }
+
+        private void ResetDefaults()
+        {
+            var result = MessageBox.Show("Clear all settings without saving?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+            if (result != DialogResult.Yes) return;
+
+            //Make sure disconnected
+            DisconnectRPC();
+            detachProcess();            
+            var newConfig = new Config();
+            //Set default values
+
+            SetStatus("Reset config to default");
+            config = newConfig;
+        }
+
+        private void newConfigurationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ResetDefaults();
+        }
+
+        private void saveFileDialog1_FileOk(object sender, CancelEventArgs e)
+        {
+            
+           
         }
     }
 
@@ -563,9 +638,13 @@ namespace gobeam
         public string Type;
         public string KeyName;
         public byte KeyCode;
+        [JsonIgnore]
         public bool IsPressed;
+        [JsonIgnore]
         public bool IsEnabled; //This is a flag primarily for joysticks
+        [JsonIgnore]
         public vJoy joystick;
+        [JsonIgnore]
         public vJoy.JoystickState joystickReport;
         public KeyBind(int index, string label, string type, string keyname, byte keycode)
         {

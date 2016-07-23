@@ -1,6 +1,10 @@
 # Custom stuff
 gobeam.json
 
+
+# proto generated files 
+*.pb.go
+
 # Ignore packages for csharp project
 /examples/robot_grpc_client/csharp/gobeam/packages/*
 /examples/pinball_grpc_client/csharp/gobeam/packages/*

@@ -604,13 +604,13 @@ namespace gobeam
 
                                 Console.WriteLine("Key " + touch.Id);
                                 //Press or release key based on report
-                                if ((touch.Holding == 0 && key.IsPressed) ||
-                                    (touch.Holding == 1 && !key.IsPressed))
-                                {
+                                if ((touch.PressFrequency != 0 && key.IsPressed) ||
+                                    (touch.ReleaseFrequency != 0 && !key.IsPressed))
+                                {                                                                        
                                     key.IsPressed = !key.IsPressed;
                                     Console.WriteLine("KeyPress " + touch.Id + "," + key.IsPressed);
                                     w32.keybd_event(key.KeyCode, 0, (key.IsPressed) ? 0 : w32.KEYEVENTF_KEYUP, 0);
-                                }                            
+                                }      
                             }
                         }
                     }

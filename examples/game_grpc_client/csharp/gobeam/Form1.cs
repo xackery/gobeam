@@ -21,8 +21,8 @@ namespace gobeam
 {
 
     public partial class Form1 : Form
-    {        
-
+    {
+        long maxval = 32767;
         public IntPtr processHandleWindow;
         IntPtr handle;
         private Process sourceProcess;
@@ -44,13 +44,23 @@ namespace gobeam
         {
             return instance;
         }
+        public static void SetLeftProgress(int val)
+        {
+            Form1.GetInstance().prgLeft.Value = val;
+        }
+
+        public static void SetRightProgress(int val)
+        {
+            Form1.GetInstance().prgRight.Value = val;
+        }
 
         private void Form1_Load(object sender, EventArgs e)
         {
             Text = "GoBeam v" + Application.ProductVersion;
             //var js = "{\"reportInterval\":50,\"tactiles\":[{\"id\":0,\"type\":\"tactiles\",\"blueprint\":[{\"width\":1,\"height\":1,\"grid\":\"large\",\"state\":\"default\",\"x\":7,\"y\":0},{\"width\":1,\"height\":1,\"grid\":\"small\",\"state\":\"default\",\"x\":1,\"y\":2},{\"width\":1,\"height\":1,\"grid\":\"medium\",\"state\":\"default\",\"x\":3,\"y\":0}],\"analysis\":{\"holding\":true,\"frequency\":true},\"cost\":{\"press\":{\"cost\":0}},\"cooldown\":{\"press\":0},\"text\":\"Left\",\"key\":81,\"help\":\"Left Paddle\"},{\"id\":1,\"type\":\"tactiles\",\"blueprint\":[{\"width\":1,\"height\":1,\"grid\":\"large\",\"state\":\"default\",\"x\":8,\"y\":0},{\"width\":1,\"height\":1,\"grid\":\"medium\",\"state\":\"default\",\"x\":5,\"y\":0},{\"width\":1,\"height\":1,\"grid\":\"small\",\"state\":\"default\",\"x\":5,\"y\":0}],\"analysis\":{\"holding\":true,\"frequency\":true},\"key\":87,\"text\":\"Right\",\"help\":\"Right Paddle\",\"cost\":{\"press\":{\"cost\":0}},\"cooldown\":{\"press\":0}}],\"joysticks\":[],\"screens\":[]}";
-            //BeamJson beamJson = Newtonsoft.Json.JsonConvert.DeserializeObject<BeamJson>(js);
-
+            //BeamJson beamJson = Newtonsoft.Json.JsonConvert.DeserializeObject<BeamJson>(js);         
+            //prgLeft.ProgressBar.ForeColor = Color.Blue;
+            //prgRight.ProgressBar.ForeColor = Color.Red;
             instance = this;
             String strAppDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);
 
@@ -118,6 +128,7 @@ namespace gobeam
             btnTestControls.Enabled = false;
             btnTestJoystick.Enabled = false;
             btnTestJoystick.Text = "Detect Joystick";
+            chkJoyUp.Enabled = false;
             btnTestControls.Text = "Test Controls";
             lblStatus.Text = "Detached from " + txtProcess.Text + ".";
         }
@@ -165,12 +176,13 @@ namespace gobeam
 
         private void btnConnect_Click(object sender, EventArgs e)
         {
+            
             if (config == null || config.keys == null || config.keys.Length < 1)
             {
                 MessageBox.Show("First load a key config before connecting.", "No keys are mapped", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
-
+            
             bool hasJoystick = false;
             foreach (var key in config.keys)
             {
@@ -186,14 +198,22 @@ namespace gobeam
                 return;
             }
 
+           
+
             if (client != null && channel != null)
             {
+                if (tmrProgressUpdate.Enabled)
+                {
+                    tmrProgressUpdate.Enabled = false;
+                    ProgressUpdateMassSet(false, 0);
+                }
                 DisconnectRPC();
                 return;
             }
 
             try
             {
+                
                 SetStatus("Connecting to " + txtAddr.Text + "...");
                 //Create a connection
                 channel = new Channel(txtAddr.Text, ChannelCredentials.Insecure);
@@ -202,6 +222,7 @@ namespace gobeam
                 client.StreamReport();
                 btnConnect.Text = "Disconnect";
                 SetStatus("Connected to " + txtAddr.Text + ".");
+                btnTestgRPC.Enabled = true;
             }
             catch (Exception err)
             {
@@ -289,7 +310,14 @@ namespace gobeam
             if (grdControls.Rows[e.RowIndex] == null || grdControls.Rows[e.RowIndex].Cells[2] == null || grdControls.Rows[e.RowIndex].Cells[2].Value == null) return;
             if (grdControls.Rows[e.RowIndex].Cells[2].Value.ToString() == "Joystick")
             {
-                string id = Microsoft.VisualBasic.Interaction.InputBox("Joystick ID", "Enter Joystick ID # (1 is default)", "1");
+                string id = "";
+                try
+                {
+                    id = Microsoft.VisualBasic.Interaction.InputBox("Joystick ID", "Enter Joystick ID # (1 is default)", "1");
+                } catch (Exception err)
+                {
+                    return;
+                }
                 if (Byte.Parse(id) == 0)
                 {
                     MessageBox.Show("Invalid ID: " + id + ", discarding");
@@ -335,18 +363,20 @@ namespace gobeam
         }
 
         int lastKeyIndex;
-        public void SetFocusedKey(string label, byte key)
-        {            
+        public void SetFocusedKey(string type, string label, byte key)
+        {
             for (var i = 0; i < grdControls.Rows.Count - 1; i++)
             {
                 var row = grdControls.Rows[i];
                 if (row.Cells[0].Value.ToString() == lastKeyIndex.ToString())
                 {
                     row.Cells[3].Value = label;
+                    row.Cells[2].Value = type;
                     for (var j = 0; j < config.keys.Count(); j++)
                     {
                         if (config.keys[j].Index == lastKeyIndex)
                         {
+                            config.keys[j].Type = type;
                             config.keys[j].KeyName = label;
                             config.keys[j].KeyCode = key;
                             return;
@@ -356,6 +386,7 @@ namespace gobeam
                 }
             }
             MessageBox.Show("Could not find cell with index " + lastKeyIndex);
+            
         }
 
         private void btnTestJoystick_Click(object sender, EventArgs e)
@@ -380,6 +411,7 @@ namespace gobeam
                         SetStatus("vJoy was not detected");
                         MessageBox.Show("vJoy driver not enabled. This likely means you need to install vJoy drivers, or reboot if you recently installed them.", "vJoy driver not enabled.", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         btnTestJoystick.Text = "Detect Joystick";
+                        chkJoyUp.Enabled = false;
                         return;
                     }
                     Console.WriteLine("Vendor: {0}\nProduct :{1}\nVersion Number:{2}\n", joystick.GetvJoyManufacturerString(), joystick.GetvJoyProductString(), joystick.GetvJoySerialNumberString());
@@ -453,6 +485,7 @@ namespace gobeam
                 SetStatus("Joysticks configured");
                 //MessageBox.Show("Joysticks are configured successfully. Press Test Joystick if you wish to test them.");
                 btnTestJoystick.Text = "Test Joystick";
+                chkJoyUp.Enabled = true;
                 return;
             } else if (btnTestJoystick.Text == "Test Joystick")
             {
@@ -491,30 +524,71 @@ namespace gobeam
                 return;
             }
             
-            if (config.keys[testJoystickIndex].Type != "Joystick")
+            if (config.keys[testJoystickIndex].Type != "Joystick" && config.keys[testJoystickIndex].Type != "JoystickKey")
             {
                 SetStatus("Skipping #" + config.keys[testJoystickIndex].Index + " " + config.keys[testJoystickIndex].KeyName + " (Not joystick)");
                 testJoystickIndex++;
                 return;
-            }            
+            }
+
             string direction = "";
             UInt32 id = config.keys[testJoystickIndex].KeyCode;
-            var joystick = config.keys[testJoystickIndex].joystick;
+            vJoy joystick = null;
+            if (config.keys[testJoystickIndex].Type == "JoystickKey")
+            {
+                foreach (var joy in config.keys)
+                {
+                    if (joy.KeyCode == config.keys[testJoystickIndex].joystickIndex && joy.Type == "Joystick" && joy.joystick != null)
+                    {
+                        joystick = joy.joystick;
+                        break;
+                    }
+                }
+                
+            } else
+            {
+                joystick = config.keys[testJoystickIndex].joystick;
+            }
+
+            if (joystick == null)
+            {
+                MessageBox.Show("There was an error finding joystick on index " + testJoystickIndex);
+                tmrTestJoystick.Enabled = false;
+                return;
+            }
+                
             //Get max value
-            long maxval = 0;            
-            joystick.GetVJDAxisMax(id, HID_USAGES.HID_USAGE_X, ref maxval);
+            //joystick.GetVJDAxisMax(id, HID_USAGES.HID_USAGE_X, ref maxval);
             // Reset this device to default values
             joystick.ResetVJD(id);
+            Form1.JoystickIdle(joystick, (byte)id, (int)maxval);            
 
+            
             if (testJoystickDirection == 0)
             {
-                direction = "100% up";
-                joystick.SetAxis((int)maxval, config.keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
+                if (config.keys[testJoystickIndex].Type == "JoystickKey")
+                {
+                    direction = config.keys[testJoystickIndex].KeyCode.ToString();
+                    joystick.SetBtn(true, id, config.keys[testJoystickIndex].KeyCode);
+                }
+                else
+                {
+                    direction = "100% up";
+                    joystick.SetAxis((int)maxval, config.keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
+                }
             }
             if (testJoystickDirection == 1)
             {
-                direction = "100% down";
-                joystick.SetAxis(0, config.keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
+                if (config.keys[testJoystickIndex].Type == "JoystickKey")
+                {
+                    direction = "Releasing "+config.keys[testJoystickIndex].KeyCode.ToString();
+                    joystick.SetBtn(false, id, config.keys[testJoystickIndex].KeyCode);
+                }
+                else
+                {
+                    direction = "100% down";
+                    joystick.SetAxis(0, config.keys[testJoystickIndex].KeyCode, HID_USAGES.HID_USAGE_Y);
+                }
             }
 
             if (testJoystickDirection == 2)
@@ -565,12 +639,42 @@ namespace gobeam
             SetStatus("Pressing #"+ config.keys[testJoystickIndex].Index+" "+ config.keys[testJoystickIndex].KeyName+": "+direction+" ("+maxval+")");
             Console.WriteLine(joystick);
             testJoystickDirection++;
-            if (testJoystickDirection > 10)
+            if (testJoystickDirection > 10 || (config.keys[testJoystickIndex].Type == "JoystickKey" && testJoystickDirection > 1))
             {
                 testJoystickIndex++;
                 testJoystickDirection = 0;
             }
 
+        }
+        public static void JoystickButtonIdle(vJoy joystick, byte jid)
+        {
+            for (int i = 1; i < 32; i++)
+            {
+                if (joystick.GetVJDButtonNumber(jid) < i) break;
+                joystick.SetBtn(false, jid, (UInt32)i);
+            }
+        }
+
+        public static void JoystickIdle(vJoy joystick, byte id, int maxval)
+        {
+
+            if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Z)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_Z);
+            if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_RX)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_RX);
+            if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_RY)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_RY);
+            if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_RZ)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_RZ);
+            if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_SL0)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_SL0);
+            if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_SL1)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_SL1);
+            if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_POV)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_POV);
+
+            //bool AxisX = joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_X);
+            //bool AxisY = joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Y);
+            //bool AxisZ = joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Z);
+            //bool AxisRX = joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_RX);
+            //bool AxisRZ = joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_RZ);
+            // Get the number of buttons and POV Hat switchessupported by this vJoy device
+            //  int nButtons = joystick.GetVJDButtonNumber(id);
+            // int ContPovNumber = joystick.GetVJDContPovNumber(id);
+            // int DiscPovNumber = joystick.GetVJDDiscPovNumber(id);
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -712,18 +816,174 @@ namespace gobeam
 
         private void btnTestgRPC_Click(object sender, EventArgs e)
         {
-            var prg = new ProgressUpdate();
-            var tac = new ProgressUpdate.Types.TactileUpdate();
-            tac.Id = 0;
-            tac.Fired = true;
-            tac.Progress = 1;
-            prg.Tactile.Add(tac);
-            client.SendProgressUpdate(prg);
+            if (client == null || btnConnect.Text == "Connect")
+            {
+                btnTestgRPC.Enabled = false;
+                SetStatus("This is only available while connected.");
+                return;
+            }
+            ProgressUpdateMassSet(false, 0);
+            if (tmrProgressUpdate.Enabled)
+            {
+                tmrProgressUpdate.Enabled = false;
+                SetStatus("Disabled progress update check");
+            } else
+            {
+                tmrProgressUpdate.Enabled = true;
+                SetStatus("Testing progress updates...");
+            }
         }
 
         private void txtProcess_TextChanged(object sender, EventArgs e)
         {
 
+        }
+
+        bool isJoyPressPressing;
+        private void tmrJoyPress_Tick(object sender, EventArgs e)
+        {
+          
+            if (btnTestJoystick.Text == "Detect Joystick") return;
+            foreach (var key in config.keys)
+            {
+                if (key.Type != "Joystick")
+                {
+                    continue;
+                }
+                var joystick = key.joystick;
+                var jid = key.KeyCode;
+                //joystick.GetVJDAxisMax(jid, HID_USAGES.HID_USAGE_X, ref maxval);
+
+                Form1.JoystickIdle(joystick, jid, (int)maxval);
+                Form1.JoystickButtonIdle(joystick, jid);
+
+                isJoyPressPressing = !isJoyPressPressing;
+                if (isJoyPressPressing)
+                {
+                    joystick.ResetVJD(jid);
+                    joystick.SetAxis((int)(maxval * 0.5f), jid, HID_USAGES.HID_USAGE_X);
+                    joystick.SetAxis((int)(maxval * 0.5f), jid, HID_USAGES.HID_USAGE_Y);                    
+                    SetStatus("Releasing");
+                    return;
+                }
+                
+                
+                if (cmbJoystick.Text == "Up")
+                {
+                    joystick.SetAxis((int)0, jid, HID_USAGES.HID_USAGE_Y);
+                    joystick.SetAxis((int)(maxval * 0.5f), jid, HID_USAGES.HID_USAGE_X);
+                }
+                else if (cmbJoystick.Text == "Down") 
+                {
+                    joystick.SetAxis((int)maxval, jid, HID_USAGES.HID_USAGE_Y);
+                    joystick.SetAxis((int)(maxval * 0.5f), jid, HID_USAGES.HID_USAGE_X);
+                }
+                else if (cmbJoystick.Text == "Left")
+                {
+                    joystick.SetAxis((int)0, jid, HID_USAGES.HID_USAGE_X);
+                    joystick.SetAxis((int)(maxval * 0.5f), jid, HID_USAGES.HID_USAGE_Y);
+                }
+                else if (cmbJoystick.Text == "Right")
+                {
+                    joystick.SetAxis((int)maxval, jid, HID_USAGES.HID_USAGE_X);
+                    joystick.SetAxis((int)(maxval * 0.5f), jid, HID_USAGES.HID_USAGE_Y);
+                }
+                else
+                {
+                    uint btn;
+                    UInt32.TryParse(cmbJoystick.Text, out btn);
+                    if (btn < 1) return;                     
+                    joystick.SetBtn(true, jid, btn);
+                }
+                SetStatus("Pressing " + cmbJoystick.Text);
+
+                break;
+            }
+
+        }
+
+        private void chkJoyUp_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkJoyUp.Checked)
+            {
+                tmrJoyPress.Enabled = true;
+            } else
+            {
+                foreach (var key in config.keys)
+                {
+                    if (key.Type != "Joystick") continue;
+                    JoystickIdle(key.joystick, (byte)key.KeyCode, 32767);
+                    tmrJoyPress.Enabled = false;
+                }
+                SetStatus("No longer pressing keys");                                
+            }
+        }
+
+        private void cmbJoystick_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void toolStripProgressBar1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void toolStripProgressBar2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void ProgressUpdateMassSet(bool isPressed, double progress)
+        {
+            var prg = new ProgressUpdate();
+            foreach (var key in config.keys)
+            {
+                if (key.Type == "JoystickKey" || key.Type == "Tactile")
+                {
+                    var tac = new ProgressUpdate.Types.TactileUpdate();
+                    tac.Id = 0;
+                    tac.Fired = isPressed;
+                    tac.Progress = progress;
+                    prg.Tactile.Add(tac);
+                }
+
+                if (key.Type == "Joystick")
+                {
+                    var joy = new ProgressUpdate.Types.JoystickUpdate();
+                    joy.Id = 0;
+                    joy.Intensity = progress;
+                    prg.Joystick.Add(joy);
+                }
+            }
+
+            client.SendProgressUpdate(prg);
+        }
+        
+        bool puTestPressed;
+        double puTestIntensity;
+        private void tmrProgressUpdate_Tick(object sender, EventArgs e)
+        {
+            if (config.keys.Length == 0)
+            {
+                MessageBox.Show("No keys are configured, cannot test");
+                return;
+            }
+            puTestIntensity += 0.1D;
+            puTestPressed = true;
+            if (puTestIntensity > 1D)
+            {
+                puTestIntensity = 0D;
+                puTestPressed = false;
+            }
+            Console.WriteLine(puTestIntensity);
+            SetStatus((puTestPressed) ? "Pressing all buttons " : "Releasing all buttons " + puTestIntensity.ToString());
+            ProgressUpdateMassSet(puTestPressed, puTestIntensity);
+        }
+
+        private void Form1_Resize(object sender, EventArgs e)
+        {
+            lblStatus.Width = Width - 76;
         }
     }
 
@@ -735,9 +995,13 @@ namespace gobeam
         public string KeyName;
         public byte KeyCode;
         [JsonIgnore]
+        public int IdleTime;
+        [JsonIgnore]
         public bool IsPressed;
         [JsonIgnore]
         public bool IsEnabled; //This is a flag primarily for joysticks
+        //Used by JoystickKey, mapping which joystick to press
+        public int joystickIndex;
         [JsonIgnore]
         public vJoy joystick;
         [JsonIgnore]
@@ -758,7 +1022,7 @@ namespace gobeam
     }
     public class RobotServiceClient
     {
-
+        long maxval = 32767;
         readonly RobotService.RobotServiceClient client;
         
         public RobotServiceClient(RobotService.RobotServiceClient client)
@@ -782,8 +1046,7 @@ namespace gobeam
         //Handle Stream of Reports
         public async Task StreamReport()
         {
-            
-            long maxval = 32767;
+                       
             UInt32 jid;
             //Start Stream Report
             try
@@ -804,7 +1067,7 @@ namespace gobeam
                         {
                             Form1.GetInstance().Text = "[" + Form1.GetInstance().GetProcessName() + "] GoBeam v" + Application.ProductVersion;
                             //Form1.GetInstance().SetStatus("Window not visible");
-                            continue;
+                            //continue;
                         } else
                         {
                             Form1.GetInstance().Text = ">[" + Form1.GetInstance().GetProcessName() + "]< GoBeam v" + Application.ProductVersion;
@@ -813,30 +1076,67 @@ namespace gobeam
                         //iterate keymap
                         foreach (var key in Form1.config.keys)
                         {
+                            bool isAnyButtonPressed = false;
                             //iterate touches
                             foreach (var touch in report.Tactile)
                             {    
                                 if (key.Index != touch.Id) continue;
+                                if (Form1.GetInstance().processHandleWindow != w32.GetForegroundWindow()) continue;
 
                                 if (touch.Holding > 0 || touch.PressFrequency > 0 || touch.ReleaseFrequency > 0)
                                 {
-                                    Console.WriteLine(touch.Id + ": " + touch.Holding + ", "+ touch.PressFrequency+ "," + touch.ReleaseFrequency);
+                                    //Console.WriteLine(touch.Id + ": " + touch.Holding + ", "+ touch.PressFrequency+ "," + touch.ReleaseFrequency);
                                 }
+
+                                if (!key.IsPressed)
+                                {
+                                    if (key.IdleTime < 2) key.IdleTime++;                                    
+                                }
+
                                 //Press or release key based on report
                                 if ((touch.PressFrequency != 0 && !key.IsPressed) ||
                                     (touch.ReleaseFrequency != 0 && key.IsPressed))
                                 {
-                                    key.IsPressed = !key.IsPressed;
-                                    Console.WriteLine("KeyPress " + touch.Id + "," + key.IsPressed);
-                                    w32.keybd_event(key.KeyCode, 0, (key.IsPressed) ? 0 : w32.KEYEVENTF_KEYUP, 0);
+                                    key.IsPressed = !key.IsPressed;                                    
+
+                                    if (key.IsPressed)
+                                    {
+                                        key.IdleTime = 0;
+                                        isAnyButtonPressed = true;
+                                        Form1.SetLeftProgress(1);
+                                    }
+                                    if (key.Type == "Tactile")
+                                    {
+                                        //Console.WriteLine("TactileKey" + touch.Id + " ("+key.KeyName+"), " + key.IsPressed);
+                                        w32.keybd_event(key.KeyCode, 0, (key.IsPressed) ? 0 : w32.KEYEVENTF_KEYUP, 0);
+                                    } else if (key.Type == "JoystickKey")
+                                    {
+                                        if (key.joystickIndex < 1)
+                                        {
+                                            continue;
+                                        }
+                                        //Console.WriteLine("JoystickKey " + touch.Id + " (J: "+key.joystickIndex+", "+key.KeyName+"), " + key.IsPressed);
+                                        foreach (var jKey in Form1.config.keys)
+                                        {
+                                            if (jKey.IsEnabled &&  jKey.joystick != null && jKey.KeyCode == key.joystickIndex)
+                                            {
+                                                jKey.joystick.SetBtn(key.IsPressed, (UInt32)key.joystickIndex, key.KeyCode);
+                                                break;
+                                            }
+                                        }
+                                        
+                                     //   w32.keybd_event(key.KeyCode, 0, (key.IsPressed) ? 0 : w32.KEYEVENTF_KEYUP, 0);
+                                    }
                                     var tac = new ProgressUpdate.Types.TactileUpdate();
                                     tac.Id = (UInt32)key.Index;
-                                    tac.Fired = key.IsPressed;                                    
-                                    tac.Progress = (key.IsPressed) ? 1 : 0;
+                                    tac.Fired = key.IsPressed;
+                                    tac.Progress = (double)((key.IsPressed) ? 1.0 : 0.0);
                                     prg.Tactile.Add(tac);
-                                    isProgressUpdated = true;                                                                   
+                                    isProgressUpdated = true;                                  
                                 }
                             }
+
+                            if (!isAnyButtonPressed) Form1.SetLeftProgress(0);
                             
                             foreach (var joy in report.Joystick)
                             {
@@ -845,37 +1145,52 @@ namespace gobeam
                                 if (key.joystick == null) continue;
                                 if (!key.IsEnabled) continue;
                                 jid = (UInt32)key.KeyCode;
-
+                                
                                 //Console.WriteLine("joy " + joy.Id + ": " + joy.CoordMean.X + ", " + joy.CoordMean.Y);
-                                if (joy.CoordMean.X != 0 && !key.IsPressed ||
-                                    joy.CoordMean.Y != 0 && !key.IsPressed ||
-                                    joy.CoordMean.X == 0 && key.IsPressed ||
-                                    joy.CoordMean.Y == 0 && key.IsPressed)
+                                if ((!double.Equals(joy.CoordMean.X, double.NaN) && !key.IsPressed) ||
+                                    (!double.Equals(joy.CoordMean.Y, double.NaN) && !key.IsPressed) ||
+                                    (double.Equals(joy.CoordMean.X, double.NaN) && key.IsPressed) ||
+                                  ( double.Equals(joy.CoordMean.Y, double.NaN) && key.IsPressed))
                                 {
                                     
-                                    Form1.GetInstance().SetStatus("Joystick");
+                                    //Form1.GetInstance().SetStatus("Joystick");
 
                                     key.IsPressed = !key.IsPressed;
                                     var ju = new ProgressUpdate.Types.JoystickUpdate();
                                     ju.Id = jid;
-                                    ju.Intensity = (key.IsPressed) ? 1 : 0;
+                                    ju.Intensity = (double)((key.IsPressed) ? 1.0 : 0.0);
                                     prg.Joystick.Add(ju);
-                                    isProgressUpdated = true;                                   
+                                    isProgressUpdated = true;
                                 }
                                 //Console.Write(joy.CoordMean.X + "," + joy.CoordMean.Y);
 
-                                if (joy.CoordMean.X == 0 && joy.CoordMean.Y == 0)
-                                {
-                                    key.joystick.ResetVJD(jid);
+                                //Form1.JoystickIdle(key.joystick, (byte)jid, (int)maxval);
+                                
+                                if (double.Equals(joy.CoordMean.X, double.NaN) && double.Equals(joy.CoordMean.Y, double.NaN))
+                                {                                   
+                                    if (key.IdleTime < 3) key.IdleTime++;
+
+                                    if (key.IdleTime > 2)
+                                    {
+                                        //Console.WriteLine("idle");
+                                        //Form1.GetInstance().SetStatus("Idle");                                      
+                                        key.joystick.ResetVJD(jid);
+                                        Form1.JoystickIdle(key.joystick, (byte)jid, (int)maxval);
+                                        Form1.SetRightProgress(0);
+                                        key.joystick.SetAxis((int)(maxval * 0.5f), jid, HID_USAGES.HID_USAGE_X);
+                                        key.joystick.SetAxis((int)(maxval * 0.5f), jid, HID_USAGES.HID_USAGE_Y);
+                                    }
                                 } else
                                 {
+                                    Form1.SetRightProgress(1);
+                                    key.IdleTime = 0;
                                     if (double.Equals(joy.CoordMean.X,double.NaN))
                                     {
                                         key.joystick.SetAxis((int)(maxval * 0.5f), jid, HID_USAGES.HID_USAGE_X);
                                     }
                                     else
                                     {
-                                        Console.Write(" X: " + ", " + joy.CoordMean.X);
+                                        //Console.Write(" X: " + ", " + joy.CoordMean.X);
                                         key.joystick.SetAxis((int)(maxval * ((joy.CoordMean.X + 1.0f) / 2.0f)), jid, HID_USAGES.HID_USAGE_X);
                                     }
 
@@ -885,7 +1200,7 @@ namespace gobeam
                                     }
                                     else
                                     {
-                                        Console.Write(" Y: " + joy.CoordMean.Y);
+                                        //Console.Write(" Y: " + joy.CoordMean.Y);
                                         key.joystick.SetAxis((int)(maxval * ((joy.CoordMean.Y + 1.0f) / 2.0f)), jid, HID_USAGES.HID_USAGE_Y);
                                     }
 

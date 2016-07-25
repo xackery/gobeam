@@ -18,9 +18,9 @@ type WebServer struct {
 }
 
 type Rest struct {
-	Status  int64       `json:""`
-	Message string      `json:",omitempty"`
-	Data    interface{} `json:",omitempty"`
+	Status  int64       `json:"status"`
+	Message string      `json:"message,omitempty"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
 func (ws *WebServer) ListenAndServe(addr string) (err error) {
@@ -44,7 +44,7 @@ func (ws *WebServer) RouteHandler(w http.ResponseWriter, r *http.Request) {
 		Message: "Unhandled Error",
 	}
 
-	if r.Method != "POST" && strings.Contains("/api/", r.RequestURI) {
+	if strings.Contains(r.RequestURI, "/api/") && r.Method != "POST" {
 		rest.Message = "Invalid request method."
 		rest.Data = nil
 		rest.Status = 0
@@ -65,7 +65,11 @@ func (ws *WebServer) RouteHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.RequestURI {
 	case "/":
-		err = fmt.Errorf("Use /api/ prefix")
+		if r.RequestURI == "/" {
+			r.RequestURI = "/index.html"
+		}
+		http.FileServer(http.Dir("www/")).ServeHTTP(w, r)
+		return
 	case "/api/msg/":
 		err = ws.Msg(w, r, rest)
 	case "/api/channels/":

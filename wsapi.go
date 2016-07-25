@@ -101,6 +101,10 @@ func (s *Session) Open() (err error) {
 	s.initialize()
 	s.handle(&ConnectEvent{})
 
+	if !s.isReplyMonitorAlive {
+		go s.replyMonitor()
+	}
+
 	return
 }
 
@@ -183,6 +187,9 @@ func (s *Session) OpenRobot() (err error) {
 
 	s.initialize()
 	s.handle(&ConnectEvent{})
+	if !s.isReplyMonitorAlive {
+		go s.replyMonitor()
+	}
 
 	return
 }
@@ -421,7 +428,10 @@ func (s *Session) event(messageType int, message []byte) {
 		printEvent(s.Type, e)
 	}
 
-	//TODO: Add a transaction id detector to figure out what sort of unmarhsalling to do
+	//On reply, send it to eventReplyChan to be consumed
+	if e.Type == "reply" {
+		s.eventReplyChan <- e
+	}
 
 	if e != nil && e.Type == "event" {
 		i := eventToInterface[e.Event]
@@ -448,13 +458,76 @@ func (s *Session) event(messageType int, message []byte) {
 	return
 }
 
+func (s *Session) GetTransactionId() (tx int) {
+	s.lastTransactionId++
+	tx = s.lastTransactionId
+	return
+}
+
+type TransactionBuffer struct {
+	TransactionId      int
+	TransactionChannel chan Event
+	TransactionTimeout time.Time
+}
+
+//one thread of this
+func (s *Session) replyMonitor() {
+	s.eventReplyChan = make(chan *Event)
+	s.transactionSubChan = make(chan TransactionBuffer)
+	subscribers := []TransactionBuffer{}
+	if s.Debug {
+		fmt.Println("Initialized reply monitor")
+	}
+	//watch for events and subscribers
+	for {
+		select {
+		case sub := <-s.transactionSubChan:
+			if s.Debug {
+				fmt.Println("Added subscriber ", sub.TransactionId)
+			}
+			//add new subscribers
+			subscribers = append(subscribers, sub)
+			break
+		case event := <-s.eventReplyChan:
+			if s.Debug {
+				fmt.Println("Consuming event, checking for subs", len(subscribers))
+			}
+			//find any subscribers for event
+			for i, sub := range subscribers {
+				//Cleanup any subscribers who did not get response fast enough
+				if sub.TransactionTimeout.Before(time.Now()) {
+					//Remove subscription
+					subscribers[i] = subscribers[len(subscribers)-1]
+					subscribers = subscribers[:len(subscribers)-1]
+					continue
+				}
+				if s.Debug {
+					fmt.Println(event.Id, "vs ", sub.TransactionId)
+				}
+				if event.Id == sub.TransactionId {
+					//add event to transaction
+					sub.TransactionChannel <- *event
+					//Remove subscription
+					subscribers[i] = subscribers[len(subscribers)-1]
+					subscribers = subscribers[:len(subscribers)-1]
+					break
+				}
+			}
+			break
+		}
+	}
+	s.isReplyMonitorAlive = false
+}
+
 // Send a Chat Message. An active winsock connection must be active.
-func (s *Session) Msg(message string) (err error) {
+func (s *Session) Msg(message string) (chatMessage *ChatMessage, err error) {
 	s.RLock()
 	defer s.RUnlock()
+	tx := s.GetTransactionId()
 
 	if s.wsConn == nil {
-		return errors.New("No websocket connection exists.")
+		err = errors.New("No websocket connection exists.")
+		return
 	}
 
 	if s.Type != "Chat" {
@@ -462,13 +535,41 @@ func (s *Session) Msg(message string) (err error) {
 		return
 	}
 
+	//Make a channel to inform of us of the reply
+	msgChan := make(chan Event, 10)
+	s.transactionSubChan <- TransactionBuffer{
+		TransactionId:      tx,
+		TransactionChannel: msgChan,
+		TransactionTimeout: time.Now().Add(3 * time.Second),
+	}
+
 	evt := &Event{
 		Type:   "method",
 		Method: "msg",
-		Id:     2, //TODO: Make a unique transaction number requester
+		Id:     tx,
 	}
+
 	evt.Arguments = append(evt.Arguments, message)
 	err = s.wsConn.WriteJSON(evt)
+	//wait for the reply, or timeout
+	select {
+	case reply := <-msgChan:
+		//If error exists, return that
+		if len(reply.Error) > 0 {
+			err = fmt.Errorf("%s", reply.Error)
+			return
+		}
+		//Try to parse reply as chat message
+		chatMessage = &ChatMessage{}
+		err = json.Unmarshal(reply.Data, chatMessage)
+		if err != nil {
+			return
+		}
+		break
+	case <-time.After(10 * time.Second):
+		err = fmt.Errorf("Response timeout on transaction %d", tx)
+		break
+	}
 	return
 }
 

@@ -96,12 +96,16 @@ type Session struct {
 	Type    string //Session Type
 	Cookies []*http.Cookie
 	sync.RWMutex
-	endpoints    []string
-	authKey      string //ws authkey
-	LoginPayload *LoginPayload
-	config       *GoBeamConfig
-	CsrfToken    string
-	UseCookies   bool
+	endpoints           []string
+	authKey             string //ws authkey
+	LoginPayload        *LoginPayload
+	config              *GoBeamConfig
+	CsrfToken           string
+	UseCookies          bool
+	lastTransactionId   int
+	eventReplyChan      chan *Event
+	transactionSubChan  chan TransactionBuffer
+	isReplyMonitorAlive bool
 	// General configurable settings.
 
 	// Authentication token for this session

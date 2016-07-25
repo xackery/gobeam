@@ -24,7 +24,7 @@ func main() {
 
 	//Create a chatbot session.
 	chatbot := beam.Session{
-		Debug:           true,
+		Debug:           false,
 		UseCookies:      true,
 		TimeoutDuration: 2 * time.Second,
 	}

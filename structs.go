@@ -290,7 +290,7 @@ type Channel struct {
 		Description    string `json:"description,omitempty"`
 		Source         string `json:"source,omitempty"`
 		ViewersCurrent int    `json:"viewersCurrent,omitempty"`
-		CoverURL       int    `json:"coverUrl,omitempty"`
+		CoverURL       string `json:"coverUrl,omitempty"`
 		Online         int    `json:"online,omitempty"`
 	} `json:"type,omitempty"`
 	Cache       []interface{} `json:"cache,omitempty"`

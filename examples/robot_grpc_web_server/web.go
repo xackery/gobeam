@@ -18,7 +18,7 @@ type WebServer struct {
 }
 
 type Rest struct {
-	Status  int64       `json:"status"`
+	Status  int64       `json:"status,omitempty"`
 	Message string      `json:"message,omitempty"`
 	Data    interface{} `json:"data,omitempty"`
 }

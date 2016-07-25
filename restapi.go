@@ -231,3 +231,26 @@ func (s *Session) TetrisGateway() (gateway string, err error) {
 
 	return
 }
+
+// Gateway returns the a websocket Gateway address
+func (s *Session) Channels(id uint32) (channel *Channel, err error) {
+	if s.LoginPayload == nil {
+		err = fmt.Errorf("Not logged in")
+		return
+	}
+
+	if id == 0 {
+		id = s.LoginPayload.Channel.ID
+	}
+
+	response, err := s.Request("GET", fmt.Sprintf("%s%d", CHANNELS, id), nil)
+	if err != nil {
+		return
+	}
+
+	err = unmarshal(response, &channel)
+	if err != nil {
+		return
+	}
+	return
+}

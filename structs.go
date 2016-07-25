@@ -240,6 +240,129 @@ type Author struct {
 	UserRoles []string `json:"user_roles"`
 }
 
+type Channel struct {
+	ID                   int    `json:"id,omitempty"`
+	UserID               int    `json:"userId,omitempty"`
+	Token                string `json:"token,omitempty"`
+	Online               bool   `json:"online,omitempty"`
+	Featured             bool   `json:"featured,omitempty"`
+	Partnered            bool   `json:"partnered,omitempty"`
+	TranscodingProfileID int    `json:"transcodingProfileId,omitempty"`
+	Suspended            bool   `json:"suspended,omitempty"`
+	Name                 string `json:"name,omitempty"`
+	Audience             string `json:"audience,omitempty"`
+	ViewersTotal         int    `json:"viewersTotal,omitempty"`
+	ViewersCurrent       int    `json:"viewersCurrent,omitempty"`
+	NumFollowers         int    `json:"numFollowers,omitempty"`
+	Description          string `json:"description,omitempty"`
+	TypeID               int    `json:"typeId,omitempty"`
+	Interactive          bool   `json:"interactive,omitempty"`
+	TetrisGameID         int    `json:"tetrisGameId,omitempty"`
+	Ftl                  int    `json:"ftl,omitempty"`
+	HasVod               bool   `json:"hasVod,omitempty"`
+	LanguageID           int    `json:"languageId,omitempty"`
+	CoverID              int    `json:"coverId,omitempty"`
+	ThumbnailID          int    `json:"thumbnailId,omitempty"`
+	BadgeID              int    `json:"badgeId,omitempty"`
+	HosteeID             int    `json:"hosteeId,omitempty"`
+	CreatedAt            string `json:"createdAt,omitempty"`
+	UpdatedAt            string `json:"updatedAt,omitempty"`
+	DeletedAt            int    `json:"deletedAt,omitempty"`
+	Thumbnail            int    `json:"thumbnail,omitempty"`
+	Cover                struct {
+		Meta struct {
+			Small string `json:"small,omitempty"`
+		} `json:"meta,omitempty"`
+		ID         int    `json:"id,omitempty"`
+		Type       string `json:"type,omitempty"`
+		Relid      int    `json:"relid,omitempty"`
+		URL        string `json:"url,omitempty"`
+		Store      string `json:"store,omitempty"`
+		RemotePath string `json:"remotePath,omitempty"`
+		CreatedAt  string `json:"createdAt,omitempty"`
+		UpdatedAt  string `json:"updatedAt,omitempty"`
+	} `json:"cover,omitempty"`
+	Badge int `json:"badge,omitempty"`
+	Type  struct {
+		ID             int    `json:"id,omitempty"`
+		Name           string `json:"name,omitempty"`
+		Parent         string `json:"parent,omitempty"`
+		Description    string `json:"description,omitempty"`
+		Source         string `json:"source,omitempty"`
+		ViewersCurrent int    `json:"viewersCurrent,omitempty"`
+		CoverURL       int    `json:"coverUrl,omitempty"`
+		Online         int    `json:"online,omitempty"`
+	} `json:"type,omitempty"`
+	Cache       []interface{} `json:"cache,omitempty"`
+	Preferences struct {
+		CostreamAllow                 string `json:"costream:allow,omitempty"`
+		Sharetext                     string `json:"sharetext,omitempty"`
+		ChannelLinksClickable         bool   `json:"channel:links:clickable,omitempty"`
+		ChannelLinksAllowed           bool   `json:"channel:links:allowed,omitempty"`
+		ChannelSlowchat               int    `json:"channel:slowchat,omitempty"`
+		ChannelNotifyFollow           bool   `json:"channel:notify:follow,omitempty"`
+		ChannelNotifyFollowmessage    string `json:"channel:notify:followmessage,omitempty"`
+		ChannelNotifyHostedBy         string `json:"channel:notify:hostedBy,omitempty"`
+		ChannelNotifyHosting          string `json:"channel:notify:hosting,omitempty"`
+		ChannelNotifySubscribemessage string `json:"channel:notify:subscribemessage,omitempty"`
+		ChannelNotifySubscribe        bool   `json:"channel:notify:subscribe,omitempty"`
+		ChannelPartnerSubmail         string `json:"channel:partner:submail,omitempty"`
+		ChannelPlayerMuteOwn          bool   `json:"channel:player:muteOwn,omitempty"`
+		ChannelTweetEnabled           bool   `json:"channel:tweet:enabled,omitempty"`
+		ChannelTweetBody              string `json:"channel:tweet:body,omitempty"`
+	} `json:"preferences,omitempty"`
+	User struct {
+		Level  int `json:"level,omitempty"`
+		Social struct {
+			Verified []interface{} `json:"verified,omitempty"`
+		} `json:"social,omitempty"`
+		ID          int    `json:"id,omitempty"`
+		Username    string `json:"username,omitempty"`
+		Verified    bool   `json:"verified,omitempty"`
+		Experience  int    `json:"experience,omitempty"`
+		Sparks      int    `json:"sparks,omitempty"`
+		AvatarURL   string `json:"avatarUrl,omitempty"`
+		Bio         int    `json:"bio,omitempty"`
+		PrimaryTeam int    `json:"primaryTeam,omitempty"`
+		CreatedAt   string `json:"createdAt,omitempty"`
+		UpdatedAt   string `json:"updatedAt,omitempty"`
+		DeletedAt   int    `json:"deletedAt,omitempty"`
+		Groups      []struct {
+			ID   int    `json:"id,omitempty"`
+			Name string `json:"name,omitempty"`
+		} `json:"groups,omitempty"`
+		Channel struct {
+			ID                   int    `json:"id,omitempty"`
+			UserID               int    `json:"userId,omitempty"`
+			Token                string `json:"token,omitempty"`
+			Online               bool   `json:"online,omitempty"`
+			Featured             bool   `json:"featured,omitempty"`
+			Partnered            bool   `json:"partnered,omitempty"`
+			TranscodingProfileID int    `json:"transcodingProfileId,omitempty"`
+			Suspended            bool   `json:"suspended,omitempty"`
+			Name                 string `json:"name,omitempty"`
+			Audience             string `json:"audience,omitempty"`
+			ViewersTotal         int    `json:"viewersTotal,omitempty"`
+			ViewersCurrent       int    `json:"viewersCurrent,omitempty"`
+			NumFollowers         int    `json:"numFollowers,omitempty"`
+			Description          string `json:"description,omitempty"`
+			TypeID               int    `json:"typeId,omitempty"`
+			Interactive          bool   `json:"interactive,omitempty"`
+			TetrisGameID         int    `json:"tetrisGameId,omitempty"`
+			Ftl                  int    `json:"ftl,omitempty"`
+			HasVod               bool   `json:"hasVod,omitempty"`
+			LanguageID           int    `json:"languageId,omitempty"`
+			CoverID              int    `json:"coverId,omitempty"`
+			ThumbnailID          int    `json:"thumbnailId,omitempty"`
+			BadgeID              int    `json:"badgeId,omitempty"`
+			HosteeID             int    `json:"hosteeId,omitempty"`
+			CreatedAt            string `json:"createdAt,omitempty"`
+			UpdatedAt            string `json:"updatedAt,omitempty"`
+			DeletedAt            int    `json:"deletedAt,omitempty"`
+		} `json:"channel,omitempty"`
+	} `json:"user,omitempty"`
+}
+
 //When a timeout event is received
 type UserTimeout struct {
 	User     User `json:"user"`

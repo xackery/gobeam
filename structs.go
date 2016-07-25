@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"reflect"
 	"sync"
+	"time"
 )
 
 type LoginPayload struct {
@@ -93,6 +94,11 @@ type LoginPayload struct {
 
 // A Session represents a connection to the Beam API.
 type Session struct {
+	// Debug for printing JSON request/responses
+	Debug bool
+	//Timeout for calls
+	TimeoutDuration time.Duration
+
 	Type    string //Session Type
 	Cookies []*http.Cookie
 	sync.RWMutex
@@ -110,9 +116,6 @@ type Session struct {
 
 	// Authentication token for this session
 	Token string
-
-	// Debug for printing JSON request/responses
-	Debug bool
 
 	// Should the session reconnect the websocket on errors.
 	ShouldReconnectOnError bool
@@ -185,7 +188,7 @@ type ChatMessage struct {
 		Messages []ChatMessageDetail `json:"message"`
 	} `json:"message"`
 	Meta   ChatMeta `json:"meta,omitempty"`
-	Target string   `json:"target"` //Used by whisper
+	Target string   `json:"target,omitempty"` //Used by whisper
 }
 
 //Part of chatmessage

@@ -55,6 +55,10 @@ func (s *Session) Open() (err error) {
 		return
 	}
 
+	if s.TimeoutDuration < 1*time.Second {
+		s.TimeoutDuration = 1 * time.Second
+	}
+
 	s.Type = "Chat"
 	// Get the gateway to use for the Websocket connection
 	g, err := s.Gateway()
@@ -122,6 +126,9 @@ func (s *Session) OpenRobot() (err error) {
 		return
 	}
 
+	if s.TimeoutDuration < 1*time.Second {
+		s.TimeoutDuration = 1 * time.Second
+	}
 	s.Type = "Interactive"
 
 	// Get the gateway to use for the Websocket connection
@@ -472,6 +479,9 @@ type TransactionBuffer struct {
 
 //one thread of this
 func (s *Session) replyMonitor() {
+	if s.isReplyMonitorAlive {
+		return
+	}
 	s.eventReplyChan = make(chan *Event)
 	s.transactionSubChan = make(chan TransactionBuffer)
 	subscribers := []TransactionBuffer{}
@@ -523,7 +533,6 @@ func (s *Session) replyMonitor() {
 func (s *Session) Msg(message string) (chatMessage *ChatMessage, err error) {
 	s.RLock()
 	defer s.RUnlock()
-	tx := s.GetTransactionId()
 
 	if s.wsConn == nil {
 		err = errors.New("No websocket connection exists.")
@@ -536,6 +545,7 @@ func (s *Session) Msg(message string) (chatMessage *ChatMessage, err error) {
 	}
 
 	//Make a channel to inform of us of the reply
+	tx := s.GetTransactionId()
 	msgChan := make(chan Event, 10)
 	s.transactionSubChan <- TransactionBuffer{
 		TransactionId:      tx,
@@ -574,12 +584,13 @@ func (s *Session) Msg(message string) (chatMessage *ChatMessage, err error) {
 }
 
 //Whisper a user
-func (s *Session) Whisper(username string, message string) (err error) {
+func (s *Session) Whisper(username string, message string) (chatMessage *ChatMessage, err error) {
 	s.RLock()
 	defer s.RUnlock()
 
 	if s.wsConn == nil {
-		return errors.New("No websocket connection exists.")
+		err = errors.New("No websocket connection exists.")
+		return
 	}
 
 	if s.Type != "Chat" {
@@ -587,16 +598,46 @@ func (s *Session) Whisper(username string, message string) (err error) {
 		return
 	}
 
+	//Make a channel to inform of us of the reply
+	tx := s.GetTransactionId()
+	msgChan := make(chan Event, 10)
+	s.transactionSubChan <- TransactionBuffer{
+		TransactionId:      tx,
+		TransactionChannel: msgChan,
+		TransactionTimeout: time.Now().Add(3 * time.Second),
+	}
+
 	evt := &Event{
 		Type:   "method",
 		Method: "whisper",
-		Id:     5, //TODO: Make a unique transaction number requester
+		Id:     tx,
 	}
 
 	evt.Arguments = append(evt.Arguments, username)
 	evt.Arguments = append(evt.Arguments, message)
 
 	err = s.wsConn.WriteJSON(evt)
+
+	//wait for the reply, or timeout
+	select {
+	case reply := <-msgChan:
+		//If error exists, return that
+		if len(reply.Error) > 0 {
+			err = fmt.Errorf("%s", reply.Error)
+			return
+		}
+		//Try to parse reply as chat message
+		chatMessage = &ChatMessage{}
+		err = json.Unmarshal(reply.Data, chatMessage)
+		if err != nil {
+			return
+		}
+		break
+	case <-time.After(s.TimeoutDuration):
+		err = fmt.Errorf("Response timeout on transaction %d", tx)
+		break
+	}
+
 	return
 }
 
@@ -653,7 +694,7 @@ func (s *Session) Timeout(username string, duration string) (err error) {
 
 // Request previous messages from this chat from before you joined.
 // The argument controls how many messages are requested. 100 is the maximum.
-func (s *Session) History(messageCount int) (err error) {
+func (s *Session) History(messageCount int) (chatMessages []*ChatMessage, err error) {
 	if messageCount > 100 {
 		err = fmt.Errorf("messageCount must be less than 101")
 		return
@@ -665,7 +706,8 @@ func (s *Session) History(messageCount int) (err error) {
 	defer s.RUnlock()
 
 	if s.wsConn == nil {
-		return errors.New("No websocket connection exists.")
+		err = errors.New("No websocket connection exists.")
+		return
 	}
 
 	if s.Type != "Chat" {
@@ -673,14 +715,43 @@ func (s *Session) History(messageCount int) (err error) {
 		return
 	}
 
+	//Make a channel to inform of us of the reply
+	tx := s.GetTransactionId()
+	msgChan := make(chan Event, 10)
+	s.transactionSubChan <- TransactionBuffer{
+		TransactionId:      tx,
+		TransactionChannel: msgChan,
+		TransactionTimeout: time.Now().Add(3 * time.Second),
+	}
+
 	evt := &Event{
 		Type:   "method",
 		Method: "history",
-		Id:     1, //TODO: Make a unique transaction number requester
+		Id:     tx,
 	}
 	evt.Arguments = append(evt.Arguments, messageCount)
 
 	err = s.wsConn.WriteJSON(evt)
+
+	//wait for the reply, or timeout
+	select {
+	case reply := <-msgChan:
+		//If error exists, return that
+		if len(reply.Error) > 0 {
+			err = fmt.Errorf("%s", reply.Error)
+			return
+		}
+		//Try to parse reply as chat message
+		chatMessages = []*ChatMessage{}
+		err = json.Unmarshal(reply.Data, &chatMessages)
+		if err != nil {
+			return
+		}
+		break
+	case <-time.After(s.TimeoutDuration):
+		err = fmt.Errorf("Response timeout on transaction %d", tx)
+		break
+	}
 	return
 }
 

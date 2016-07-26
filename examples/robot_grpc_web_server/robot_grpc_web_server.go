@@ -22,6 +22,7 @@ type streamSession struct {
 
 func main() {
 
+	var err error
 	//Create a chatbot session.
 	chatbot := beam.Session{
 		Debug:           false,
@@ -36,7 +37,7 @@ func main() {
 
 	//Log in
 	log.Println("[Chatbot] Logging in")
-	err := chatbot.Login()
+	err = chatbot.Login()
 	if err != nil {
 		log.Println("[Chatbot] Error logging in:", err.Error())
 		return

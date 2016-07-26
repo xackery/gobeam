@@ -363,6 +363,90 @@ type Channel struct {
 	} `json:"user,omitempty"`
 }
 
+type VersionsResponse struct {
+	Controls struct {
+		ReportInterval int `json:"reportInterval,omitempty"`
+		Tactiles       []struct {
+			ID        int    `json:"id,omitempty"`
+			Type      string `json:"type,omitempty"`
+			Blueprint []struct {
+				Width  int    `json:"width,omitempty"`
+				Height int    `json:"height,omitempty"`
+				Grid   string `json:"grid,omitempty"`
+				State  string `json:"state,omitempty"`
+				X      int    `json:"x,omitempty"`
+				Y      int    `json:"y,omitempty"`
+			} `json:"blueprint,omitempty"`
+			Analysis struct {
+				Holding   bool `json:"holding,omitempty"`
+				Frequency bool `json:"frequency,omitempty"`
+			} `json:"analysis,omitempty"`
+			Cost struct {
+				Press struct {
+					Cost int `json:"cost,omitempty"`
+				} `json:"press,omitempty"`
+			} `json:"cost,omitempty"`
+			Cooldown struct {
+				Press int `json:"press,omitempty"`
+			} `json:"cooldown,omitempty"`
+		} `json:"tactiles,omitempty"`
+		Joysticks []struct {
+			ID        int    `json:"id,omitempty"`
+			Type      string `json:"type,omitempty"`
+			Blueprint []struct {
+				Width  int    `json:"width,omitempty"`
+				Height int    `json:"height,omitempty"`
+				Grid   string `json:"grid,omitempty"`
+				State  string `json:"state,omitempty"`
+				X      int    `json:"x,omitempty"`
+				Y      int    `json:"y,omitempty"`
+			} `json:"blueprint,omitempty"`
+			Analysis struct {
+				Coords struct {
+					Mean   bool `json:"mean,omitempty"`
+					StdDev bool `json:"stdDev,omitempty"`
+				} `json:"coords,omitempty"`
+			} `json:"analysis,omitempty"`
+		} `json:"joysticks,omitempty"`
+		Screens []struct {
+			ID        int    `json:"id,omitempty"`
+			Type      string `json:"type,omitempty"`
+			Blueprint []struct {
+				State string `json:"state,omitempty"`
+			} `json:"blueprint,omitempty"`
+			Analysis struct {
+				Position struct {
+					Mean   bool `json:"mean,omitempty"`
+					StdDev bool `json:"stdDev,omitempty"`
+				} `json:"position,omitempty"`
+				Clicks bool `json:"clicks,omitempty"`
+			} `json:"analysis,omitempty"`
+		} `json:"screens,omitempty"`
+	} `json:"controls,omitempty"`
+	ID           int    `json:"id,omitempty"`
+	GameID       int    `json:"gameId,omitempty"`
+	Version      string `json:"version,omitempty"`
+	VersionOrder int    `json:"versionOrder,omitempty"`
+	Changelog    string `json:"changelog,omitempty"`
+	State        string `json:"state,omitempty"`
+	Installation int    `json:"installation,omitempty"`
+	Download     int    `json:"download,omitempty"`
+	UpdatedAt    string `json:"updatedAt,omitempty"`
+	CreatedAt    string `json:"createdAt,omitempty"`
+	Game         struct {
+		ID                   int    `json:"id,omitempty"`
+		OwnerID              int    `json:"ownerId,omitempty"`
+		Name                 string `json:"name,omitempty"`
+		CoverURL             int    `json:"coverUrl,omitempty"`
+		Description          int    `json:"description,omitempty"`
+		HasPublishedVersions bool   `json:"hasPublishedVersions,omitempty"`
+		UpdatedAt            string `json:"updatedAt,omitempty"`
+		Installation         int    `json:"installation,omitempty"`
+		CreatedAt            string `json:"createdAt,omitempty"`
+		DeletedAt            int    `json:"deletedAt,omitempty"`
+	} `json:"game,omitempty"`
+}
+
 //When a timeout event is received
 type UserTimeout struct {
 	User     User `json:"user"`

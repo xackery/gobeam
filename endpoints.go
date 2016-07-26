@@ -11,6 +11,7 @@ var (
 	CHANNELS = API + "channels/"
 	GATEWAY  = API + "chats/"
 
-	AUTH  = API + "oauth/"
-	LOGIN = USERS + "login"
+	AUTH         = API + "oauth/"
+	LOGIN        = USERS + "login"
+	TETRIS_GAMES = TETRIS + "games/"
 )

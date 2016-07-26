@@ -232,7 +232,7 @@ func (s *Session) TetrisGateway() (gateway string, err error) {
 	return
 }
 
-// Gateway returns the a websocket Gateway address
+//Return channel details
 func (s *Session) Channels(id uint32) (channel *Channel, err error) {
 	if s.LoginPayload == nil {
 		err = fmt.Errorf("Not logged in")
@@ -249,6 +249,46 @@ func (s *Session) Channels(id uint32) (channel *Channel, err error) {
 	}
 
 	err = unmarshal(response, &channel)
+	if err != nil {
+		return
+	}
+	return
+}
+
+//Return tetris details
+func (s *Session) TetrisGamesPublic(id uint32) (versions *VersionsResponse, err error) {
+	if id == 0 && s.LoginPayload != nil {
+		id = s.LoginPayload.Channel.ID
+	}
+	if id < 1 {
+		err = fmt.Errorf("Version ID not found")
+		return
+	}
+
+	response, err := s.Request("GET", fmt.Sprintf("%s%s%d", TETRIS_GAMES, "versions/", id), nil)
+	if err != nil {
+		return
+	}
+
+	err = unmarshal(response, &versions)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (s *Session) TetrisGamesOwned() (versions *VersionsResponse, err error) {
+	if s.LoginPayload == nil {
+		err = fmt.Errorf("Not logged in")
+		return
+	}
+
+	response, err := s.Request("GET", fmt.Sprintf("%s%s", TETRIS_GAMES, "owned"), nil)
+	if err != nil {
+		return
+	}
+
+	err = unmarshal(response, &versions)
 	if err != nil {
 		return
 	}

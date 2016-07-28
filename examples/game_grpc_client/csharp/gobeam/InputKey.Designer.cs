@@ -65,13 +65,13 @@
             // 
             this.cmbInputType.FormattingEnabled = true;
             this.cmbInputType.Items.AddRange(new object[] {
-            "Keyboard",
-            "Joystick"});
+            "Tactile",
+            "JoystickKey"});
             this.cmbInputType.Location = new System.Drawing.Point(77, 25);
             this.cmbInputType.Name = "cmbInputType";
             this.cmbInputType.Size = new System.Drawing.Size(80, 21);
             this.cmbInputType.TabIndex = 2;
-            this.cmbInputType.Text = "Keyboard";
+            this.cmbInputType.Text = "Tactile";
             this.cmbInputType.SelectedIndexChanged += new System.EventHandler(this.cmbInputType_SelectedIndexChanged);
             this.cmbInputType.KeyDown += new System.Windows.Forms.KeyEventHandler(this.cmbInputType_KeyDown);
             this.cmbInputType.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.cmbInputType_KeyPress);
@@ -195,7 +195,7 @@
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "InputKey";
+            this.Text = "InputKey #";
             this.TopMost = true;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.InputKey_FormClosing);
             this.Load += new System.EventHandler(this.InputKey_Load);

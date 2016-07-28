@@ -74,7 +74,7 @@ namespace gobeam
             GetInstance().grdControls.Rows.Clear();
             foreach (var key in newKeys)
             {
-                GetInstance().grdControls.Rows.Add(key.Index, key.Label, key.Type, key.KeyName);
+                GetInstance().grdControls.Rows.Add(key.Index, key.Label, key.Type, key.joystickIndex, key.KeyName);
             }
             
         }
@@ -310,14 +310,8 @@ namespace gobeam
             if (grdControls.Rows[e.RowIndex] == null || grdControls.Rows[e.RowIndex].Cells[2] == null || grdControls.Rows[e.RowIndex].Cells[2].Value == null) return;
             if (grdControls.Rows[e.RowIndex].Cells[2].Value.ToString() == "Joystick")
             {
-                string id = "";
-                try
-                {
-                    id = Microsoft.VisualBasic.Interaction.InputBox("Joystick ID", "Enter Joystick ID # (1 is default)", "1");
-                } catch (Exception err)
-                {
-                    return;
-                }
+                string id = Microsoft.VisualBasic.Interaction.InputBox("Joystick ID", "Enter Joystick ID # (1 is default)", "1");
+                    
                 if (Byte.Parse(id) == 0)
                 {
                     MessageBox.Show("Invalid ID: " + id + ", discarding");
@@ -339,7 +333,7 @@ namespace gobeam
                     MessageBox.Show("There was an error setting joystick id, try again later.");
                     return;
                 }
-                grdControls.Rows[e.RowIndex].Cells[3].Value = id;
+                grdControls.Rows[e.RowIndex].Cells[4].Value = id;
                 return;
             }
 
@@ -349,7 +343,16 @@ namespace gobeam
                 if (key.Index == (int)grdControls.Rows[e.RowIndex].Cells[0].Value)
                 {
                     lastKeyIndex = key.Index;
-                    break;
+                    if (inputKey == null) inputKey = new InputKey();
+                    inputKey.Show();
+
+                    InputKey.SetJoystickID(key.joystickIndex);
+                    InputKey.SetKeyButton(key.KeyCode);
+                    InputKey.SetType(key.Type);
+                    InputKey.SetIndex(key.Index.ToString());
+                    
+                    this.Enabled = false;
+                    return;
                 }
             }
             if (lastKeyIndex == -1)
@@ -357,21 +360,21 @@ namespace gobeam
                 MessageBox.Show("An internal error occured");
                 return;
             }
-            if (inputKey == null) inputKey = new InputKey();
-            inputKey.Show();
-            this.Enabled = false;
+            
         }
 
         int lastKeyIndex;
-        public void SetFocusedKey(string type, string label, byte key)
+        public void SetFocusedKey(string type, string label, byte key, byte joystickIndex)
         {
             for (var i = 0; i < grdControls.Rows.Count - 1; i++)
             {
                 var row = grdControls.Rows[i];
                 if (row.Cells[0].Value.ToString() == lastKeyIndex.ToString())
                 {
-                    row.Cells[3].Value = label;
+
                     row.Cells[2].Value = type;
+                    row.Cells[3].Value = joystickIndex.ToString();
+                    row.Cells[4].Value = label;                    
                     for (var j = 0; j < config.keys.Count(); j++)
                     {
                         if (config.keys[j].Index == lastKeyIndex)
@@ -379,6 +382,7 @@ namespace gobeam
                             config.keys[j].Type = type;
                             config.keys[j].KeyName = label;
                             config.keys[j].KeyCode = key;
+                            config.keys[j].joystickIndex = joystickIndex;
                             return;
                         }
                     }
@@ -648,6 +652,7 @@ namespace gobeam
         }
         public static void JoystickButtonIdle(vJoy joystick, byte jid)
         {
+            if (joystick == null) return;
             for (int i = 1; i < 32; i++)
             {
                 if (joystick.GetVJDButtonNumber(jid) < i) break;
@@ -657,15 +662,41 @@ namespace gobeam
 
         public static void JoystickIdle(vJoy joystick, byte id, int maxval)
         {
+            if (id != 0)
+            {
+                if (joystick == null)
+                {
+                    MessageBox.Show("Cannot reset joystick, null joystick passed");
+                    return;
+                }
+                if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Z)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_Z);
+                if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_RX)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_RX);
+                if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_RY)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_RY);
+                if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_RZ)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_RZ);
+                if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_SL0)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_SL0);
+                if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_SL1)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_SL1);
+                if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_POV)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_POV);
+                return;
+            }
 
-            if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Z)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_Z);
-            if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_RX)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_RX);
-            if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_RY)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_RY);
-            if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_RZ)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_RZ);
-            if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_SL0)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_SL0);
-            if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_SL1)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_SL1);
-            if (joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_POV)) joystick.SetAxis((int)(maxval * 0.5f), id, HID_USAGES.HID_USAGE_POV);
-
+            for (byte i = 1; i < 5; i++)
+            {
+                foreach (var key in config.keys)
+                {
+                    if (key.joystick != null && key.joystickIndex == i)
+                    {
+                        joystick = key.joystick;
+                        if (joystick.GetVJDAxisExist(i, HID_USAGES.HID_USAGE_Z)) joystick.SetAxis((int)(maxval * 0.5f), i, HID_USAGES.HID_USAGE_Z);
+                        if (joystick.GetVJDAxisExist(i, HID_USAGES.HID_USAGE_RX)) joystick.SetAxis((int)(maxval * 0.5f), i, HID_USAGES.HID_USAGE_RX);
+                        if (joystick.GetVJDAxisExist(i, HID_USAGES.HID_USAGE_RY)) joystick.SetAxis((int)(maxval * 0.5f), i, HID_USAGES.HID_USAGE_RY);
+                        if (joystick.GetVJDAxisExist(i, HID_USAGES.HID_USAGE_RZ)) joystick.SetAxis((int)(maxval * 0.5f), i, HID_USAGES.HID_USAGE_RZ);
+                        if (joystick.GetVJDAxisExist(i, HID_USAGES.HID_USAGE_SL0)) joystick.SetAxis((int)(maxval * 0.5f), i, HID_USAGES.HID_USAGE_SL0);
+                        if (joystick.GetVJDAxisExist(i, HID_USAGES.HID_USAGE_SL1)) joystick.SetAxis((int)(maxval * 0.5f), i, HID_USAGES.HID_USAGE_SL1);
+                        if (joystick.GetVJDAxisExist(i, HID_USAGES.HID_USAGE_POV)) joystick.SetAxis((int)(maxval * 0.5f), i, HID_USAGES.HID_USAGE_POV);
+                        break;
+                    }
+                }
+            }
             //bool AxisX = joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_X);
             //bool AxisY = joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Y);
             //bool AxisZ = joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Z);
@@ -846,7 +877,7 @@ namespace gobeam
             if (btnTestJoystick.Text == "Detect Joystick") return;
             foreach (var key in config.keys)
             {
-                if (key.Type != "Joystick")
+                if (key.Type != "Joystick" || key.joystickIndex.ToString() != cmbJoyID.Text || key.joystick == null)
                 {
                     continue;
                 }
@@ -854,7 +885,7 @@ namespace gobeam
                 var jid = key.KeyCode;
                 //joystick.GetVJDAxisMax(jid, HID_USAGES.HID_USAGE_X, ref maxval);
 
-                Form1.JoystickIdle(joystick, jid, (int)maxval);
+                Form1.JoystickIdle(joystick, 0, (int)maxval);
                 Form1.JoystickButtonIdle(joystick, jid);
 
                 isJoyPressPressing = !isJoyPressPressing;
@@ -1115,10 +1146,13 @@ namespace gobeam
                                         {
                                             continue;
                                         }
-                                        //Console.WriteLine("JoystickKey " + touch.Id + " (J: "+key.joystickIndex+", "+key.KeyName+"), " + key.IsPressed);
+                                        Console.WriteLine("JoystickKey " + touch.Id + " (J: "+key.joystickIndex+", "+key.KeyName+"), " + key.IsPressed);
                                         foreach (var jKey in Form1.config.keys)
                                         {
-                                            if (jKey.IsEnabled &&  jKey.joystick != null && jKey.KeyCode == key.joystickIndex)
+                                            if (jKey.IsEnabled && 
+                                                jKey.joystick != null && 
+                                                jKey.joystickIndex == key.joystickIndex && 
+                                                jKey.KeyCode == key.KeyCode)
                                             {
                                                 jKey.joystick.SetBtn(key.IsPressed, (UInt32)key.joystickIndex, key.KeyCode);
                                                 break;

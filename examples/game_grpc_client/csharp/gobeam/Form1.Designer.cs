@@ -59,6 +59,7 @@
             this.Index = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Label = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Type = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.JoyID = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Key = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tmrTestControls = new System.Windows.Forms.Timer(this.components);
             this.tmrTestJoystick = new System.Windows.Forms.Timer(this.components);
@@ -69,6 +70,7 @@
             this.grpConnect = new System.Windows.Forms.GroupBox();
             this.tmrJoyPress = new System.Windows.Forms.Timer(this.components);
             this.tmrProgressUpdate = new System.Windows.Forms.Timer(this.components);
+            this.cmbJoyID = new System.Windows.Forms.ComboBox();
             this.statusStrip.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.grpControls.SuspendLayout();
@@ -89,7 +91,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtProcess.Location = new System.Drawing.Point(57, 13);
             this.txtProcess.Name = "txtProcess";
-            this.txtProcess.Size = new System.Drawing.Size(227, 20);
+            this.txtProcess.Size = new System.Drawing.Size(289, 20);
             this.txtProcess.TabIndex = 3;
             this.txtProcess.Tag = "Which process requires focus in order for keys to press";
             this.txtProcess.Text = "project64";
@@ -111,7 +113,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.btnAttach.Location = new System.Drawing.Point(6, 39);
             this.btnAttach.Name = "btnAttach";
-            this.btnAttach.Size = new System.Drawing.Size(278, 23);
+            this.btnAttach.Size = new System.Drawing.Size(340, 23);
             this.btnAttach.TabIndex = 5;
             this.btnAttach.Tag = "Attach to Process";
             this.btnAttach.Text = "Attach";
@@ -124,7 +126,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtAddr.Location = new System.Drawing.Point(57, 13);
             this.txtAddr.Name = "txtAddr";
-            this.txtAddr.Size = new System.Drawing.Size(227, 20);
+            this.txtAddr.Size = new System.Drawing.Size(289, 20);
             this.txtAddr.TabIndex = 6;
             this.txtAddr.Tag = "What address the gRPC server at";
             this.txtAddr.Text = "127.0.0.1:50051";
@@ -145,7 +147,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.btnConnect.Location = new System.Drawing.Point(6, 35);
             this.btnConnect.Name = "btnConnect";
-            this.btnConnect.Size = new System.Drawing.Size(278, 23);
+            this.btnConnect.Size = new System.Drawing.Size(340, 23);
             this.btnConnect.TabIndex = 8;
             this.btnConnect.Tag = "Connect to gRPC server";
             this.btnConnect.Text = "Connect";
@@ -160,7 +162,7 @@
             this.prgRight});
             this.statusStrip.Location = new System.Drawing.Point(0, 470);
             this.statusStrip.Name = "statusStrip";
-            this.statusStrip.Size = new System.Drawing.Size(310, 22);
+            this.statusStrip.Size = new System.Drawing.Size(372, 22);
             this.statusStrip.TabIndex = 9;
             this.statusStrip.Text = "statusStrip1";
             // 
@@ -197,7 +199,7 @@
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(310, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(372, 24);
             this.menuStrip1.TabIndex = 10;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -267,7 +269,7 @@
             this.grpControls.Controls.Add(this.grdControls);
             this.grpControls.Location = new System.Drawing.Point(12, 101);
             this.grpControls.Name = "grpControls";
-            this.grpControls.Size = new System.Drawing.Size(290, 267);
+            this.grpControls.Size = new System.Drawing.Size(352, 267);
             this.grpControls.TabIndex = 13;
             this.grpControls.TabStop = false;
             this.grpControls.Text = "Controls";
@@ -276,11 +278,12 @@
             // 
             this.grpJoystick.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.grpJoystick.Controls.Add(this.cmbJoyID);
             this.grpJoystick.Controls.Add(this.cmbJoystick);
             this.grpJoystick.Controls.Add(this.chkJoyUp);
             this.grpJoystick.Location = new System.Drawing.Point(7, 207);
             this.grpJoystick.Name = "grpJoystick";
-            this.grpJoystick.Size = new System.Drawing.Size(277, 54);
+            this.grpJoystick.Size = new System.Drawing.Size(339, 54);
             this.grpJoystick.TabIndex = 18;
             this.grpJoystick.TabStop = false;
             this.grpJoystick.Text = "Joystick Control Emulator";
@@ -326,9 +329,9 @@
             "30",
             "31",
             "32"});
-            this.cmbJoystick.Location = new System.Drawing.Point(6, 19);
+            this.cmbJoystick.Location = new System.Drawing.Point(74, 19);
             this.cmbJoystick.Name = "cmbJoystick";
-            this.cmbJoystick.Size = new System.Drawing.Size(121, 21);
+            this.cmbJoystick.Size = new System.Drawing.Size(78, 21);
             this.cmbJoystick.TabIndex = 17;
             this.cmbJoystick.Text = "Up";
             this.cmbJoystick.SelectedIndexChanged += new System.EventHandler(this.cmbJoystick_SelectedIndexChanged);
@@ -338,7 +341,7 @@
             this.chkJoyUp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.chkJoyUp.AutoSize = true;
             this.chkJoyUp.Enabled = false;
-            this.chkJoyUp.Location = new System.Drawing.Point(137, 21);
+            this.chkJoyUp.Location = new System.Drawing.Point(199, 21);
             this.chkJoyUp.Name = "chkJoyUp";
             this.chkJoyUp.Size = new System.Drawing.Size(134, 17);
             this.chkJoyUp.TabIndex = 16;
@@ -350,7 +353,7 @@
             // 
             this.btnTestJoystick.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnTestJoystick.Enabled = false;
-            this.btnTestJoystick.Location = new System.Drawing.Point(148, 178);
+            this.btnTestJoystick.Location = new System.Drawing.Point(210, 178);
             this.btnTestJoystick.Name = "btnTestJoystick";
             this.btnTestJoystick.Size = new System.Drawing.Size(135, 23);
             this.btnTestJoystick.TabIndex = 15;
@@ -382,11 +385,12 @@
             this.Index,
             this.Label,
             this.Type,
+            this.JoyID,
             this.Key});
             this.grdControls.Location = new System.Drawing.Point(6, 19);
             this.grdControls.Name = "grdControls";
             this.grdControls.RowHeadersWidth = 24;
-            this.grdControls.Size = new System.Drawing.Size(278, 149);
+            this.grdControls.Size = new System.Drawing.Size(340, 149);
             this.grdControls.TabIndex = 12;
             this.grdControls.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.grdControls_CellContentClick);
             this.grdControls.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.grdControls_CellDoubleClick);
@@ -399,6 +403,7 @@
             this.Index.Name = "Index";
             this.Index.ReadOnly = true;
             this.Index.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.Index.ToolTipText = "Index in Beam.Pro";
             // 
             // Label
             // 
@@ -407,6 +412,7 @@
             this.Label.HeaderText = "Label";
             this.Label.Name = "Label";
             this.Label.ReadOnly = true;
+            this.Label.ToolTipText = "Label in Beam.Pro";
             // 
             // Type
             // 
@@ -417,6 +423,15 @@
             this.Type.Name = "Type";
             this.Type.ReadOnly = true;
             this.Type.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.Type.ToolTipText = "Type of control";
+            // 
+            // JoyID
+            // 
+            this.JoyID.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.JoyID.HeaderText = "JoyID";
+            this.JoyID.Name = "JoyID";
+            this.JoyID.ReadOnly = true;
+            this.JoyID.ToolTipText = "Joystick ID";
             // 
             // Key
             // 
@@ -425,6 +440,7 @@
             this.Key.HeaderText = "Key";
             this.Key.Name = "Key";
             this.Key.ReadOnly = true;
+            this.Key.ToolTipText = "Key to be bound";
             // 
             // tmrTestControls
             // 
@@ -465,7 +481,7 @@
             this.grpAttach.Controls.Add(this.lblProcess);
             this.grpAttach.Location = new System.Drawing.Point(12, 27);
             this.grpAttach.Name = "grpAttach";
-            this.grpAttach.Size = new System.Drawing.Size(290, 68);
+            this.grpAttach.Size = new System.Drawing.Size(352, 68);
             this.grpAttach.TabIndex = 15;
             this.grpAttach.TabStop = false;
             this.grpAttach.Text = "Process";
@@ -480,7 +496,7 @@
             this.grpConnect.Controls.Add(this.txtAddr);
             this.grpConnect.Location = new System.Drawing.Point(12, 374);
             this.grpConnect.Name = "grpConnect";
-            this.grpConnect.Size = new System.Drawing.Size(290, 93);
+            this.grpConnect.Size = new System.Drawing.Size(352, 93);
             this.grpConnect.TabIndex = 16;
             this.grpConnect.TabStop = false;
             this.grpConnect.Text = "gRPC";
@@ -495,11 +511,25 @@
             this.tmrProgressUpdate.Interval = 500;
             this.tmrProgressUpdate.Tick += new System.EventHandler(this.tmrProgressUpdate_Tick);
             // 
+            // cmbJoyID
+            // 
+            this.cmbJoyID.FormattingEnabled = true;
+            this.cmbJoyID.Items.AddRange(new object[] {
+            "1",
+            "2",
+            "3",
+            "4"});
+            this.cmbJoyID.Location = new System.Drawing.Point(6, 19);
+            this.cmbJoyID.Name = "cmbJoyID";
+            this.cmbJoyID.Size = new System.Drawing.Size(62, 21);
+            this.cmbJoyID.TabIndex = 18;
+            this.cmbJoyID.Text = "1";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(310, 492);
+            this.ClientSize = new System.Drawing.Size(372, 492);
             this.Controls.Add(this.grpConnect);
             this.Controls.Add(this.grpAttach);
             this.Controls.Add(this.grpControls);
@@ -563,13 +593,15 @@
         private System.Windows.Forms.CheckBox chkJoyUp;
         private System.Windows.Forms.Timer tmrJoyPress;
         private System.Windows.Forms.GroupBox grpJoystick;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Index;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Label;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Type;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Key;
         private System.Windows.Forms.ToolStripProgressBar prgLeft;
         private System.Windows.Forms.ToolStripProgressBar prgRight;
         private System.Windows.Forms.Timer tmrProgressUpdate;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Index;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Label;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Type;
+        private System.Windows.Forms.DataGridViewTextBoxColumn JoyID;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Key;
+        private System.Windows.Forms.ComboBox cmbJoyID;
     }
 }
 

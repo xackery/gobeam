@@ -56,6 +56,8 @@ namespace gobeam
 
         private void Form1_Load(object sender, EventArgs e)
         {
+
+            
             Text = "GoBeam v" + Application.ProductVersion;
             //var js = "{\"reportInterval\":50,\"tactiles\":[{\"id\":0,\"type\":\"tactiles\",\"blueprint\":[{\"width\":1,\"height\":1,\"grid\":\"large\",\"state\":\"default\",\"x\":7,\"y\":0},{\"width\":1,\"height\":1,\"grid\":\"small\",\"state\":\"default\",\"x\":1,\"y\":2},{\"width\":1,\"height\":1,\"grid\":\"medium\",\"state\":\"default\",\"x\":3,\"y\":0}],\"analysis\":{\"holding\":true,\"frequency\":true},\"cost\":{\"press\":{\"cost\":0}},\"cooldown\":{\"press\":0},\"text\":\"Left\",\"key\":81,\"help\":\"Left Paddle\"},{\"id\":1,\"type\":\"tactiles\",\"blueprint\":[{\"width\":1,\"height\":1,\"grid\":\"large\",\"state\":\"default\",\"x\":8,\"y\":0},{\"width\":1,\"height\":1,\"grid\":\"medium\",\"state\":\"default\",\"x\":5,\"y\":0},{\"width\":1,\"height\":1,\"grid\":\"small\",\"state\":\"default\",\"x\":5,\"y\":0}],\"analysis\":{\"holding\":true,\"frequency\":true},\"key\":87,\"text\":\"Right\",\"help\":\"Right Paddle\",\"cost\":{\"press\":{\"cost\":0}},\"cooldown\":{\"press\":0}}],\"joysticks\":[],\"screens\":[]}";
             //BeamJson beamJson = Newtonsoft.Json.JsonConvert.DeserializeObject<BeamJson>(js);         
@@ -65,7 +67,31 @@ namespace gobeam
             String strAppDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);
 
             openFileDialog1.InitialDirectory = strAppDir;
-            saveFileDialog1.InitialDirectory = strAppDir;            
+            saveFileDialog1.InitialDirectory = strAppDir;
+            string path = (string)WinLibrary.GetRegistryValue("HKEY_CURRENT_USER\\SOFTWARE\\GoBeam", "DefaultFile", "");
+            if (path != "")
+            {
+                try
+                {
+                    var newConfig = JsonConvert.DeserializeObject<Config>(File.ReadAllText(path));
+                    if (newConfig == null)
+                    {
+                        MessageBox.Show("Config failed to load.", "Failed to load", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    config = newConfig;
+                    RebuildKeys(config.keys);
+                    txtAddr.Text = config.grpcAddress;
+                    txtProcess.Text = config.processName;
+                    SetStatus(Path.GetFileName(path) + " loaded.");
+                }
+                catch (Exception err)
+                {
+                    //Fail silently
+                    return;
+                    //MessageBox.Show(err.Message, "Failed to load", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                }                
+            }
         }
 
         public static void RebuildKeys(KeyBind[] newKeys)
@@ -730,6 +756,7 @@ namespace gobeam
             {
                 File.WriteAllText(Path.GetFullPath(saveFileDialog1.FileName), JsonConvert.SerializeObject(config, Formatting.Indented));
                 SetStatus(Path.GetFileName(saveFileDialog1.FileName) + " saved.");
+                WinLibrary.SetRegistryValue("HKEY_CURRENT_USER\\SOFTWARE\\GoBeam", "DefaultFile", Path.GetFullPath(saveFileDialog1.FileName));
             } catch (Exception err)
             {
                 MessageBox.Show(err.Message, "Failed to save", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
@@ -974,7 +1001,7 @@ namespace gobeam
                 {
                     var tac = new ProgressUpdate.Types.TactileUpdate();
                     tac.Id = 0;
-                    tac.Fired = isPressed;
+                    tac.Fired = false; // isPressed;
                     tac.Progress = progress;
                     prg.Tactile.Add(tac);
                 }
@@ -1016,6 +1043,14 @@ namespace gobeam
         {
             lblStatus.Width = Width - 76;
         }
+
+        private void txtProcess_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                btnAttach.PerformClick();
+            }
+        }
     }
 
     public class KeyBind
@@ -1037,6 +1072,9 @@ namespace gobeam
         public vJoy joystick;
         [JsonIgnore]
         public vJoy.JoystickState joystickReport;
+        [JsonIgnore]
+        public double progress;
+
         public KeyBind(int index, string label, string type, string keyname, byte keycode)
         {
             Index = index;
@@ -1107,54 +1145,77 @@ namespace gobeam
                         //iterate keymap
                         foreach (var key in Form1.config.keys)
                         {
+                            if (!key.IsPressed && key.progress > 0)
+                            {
+                                key.progress -= 0.05;
+                                //Write an eventual cooldown of keys
+                                var tac = new ProgressUpdate.Types.TactileUpdate();
+                                tac.Id = (UInt32)key.Index;
+                                tac.Fired = false;
+                                tac.Progress = key.progress;
+                                prg.Tactile.Add(tac);
+                                isProgressUpdated = true;                                
+                            }
+
                             bool isAnyButtonPressed = false;
                             //iterate touches
                             foreach (var touch in report.Tactile)
-                            {    
+                            {                                    
                                 if (key.Index != touch.Id) continue;
-                                if (Form1.GetInstance().processHandleWindow != w32.GetForegroundWindow()) continue;
-
+                                
                                 if (touch.Holding > 0 || touch.PressFrequency > 0 || touch.ReleaseFrequency > 0)
                                 {
                                     //Console.WriteLine(touch.Id + ": " + touch.Holding + ", "+ touch.PressFrequency+ "," + touch.ReleaseFrequency);
                                 }
-
-                                if (!key.IsPressed)
-                                {
-                                    if (key.IdleTime < 2) key.IdleTime++;                                    
-                                }
-
+                                
                                 //Press or release key based on report
                                 if ((touch.PressFrequency != 0 && !key.IsPressed) ||
                                     (touch.ReleaseFrequency != 0 && key.IsPressed))
                                 {
-                                    key.IsPressed = !key.IsPressed;                                    
-
+                                    key.IsPressed = !key.IsPressed;
                                     if (key.IsPressed)
                                     {
                                         key.IdleTime = 0;
                                         isAnyButtonPressed = true;
                                         Form1.SetLeftProgress(1);
+                                        //If the key hasn't been pressed in some time, re-do halo effect
+                                        if (key.progress == 0.0) key.progress = 1.0;
                                     }
                                     if (key.Type == "Tactile")
                                     {
+                                        //Focus only required for keyboard
+                                        if (Form1.GetInstance().processHandleWindow != w32.GetForegroundWindow()) continue;
                                         //Console.WriteLine("TactileKey" + touch.Id + " ("+key.KeyName+"), " + key.IsPressed);
                                         w32.keybd_event(key.KeyCode, 0, (key.IsPressed) ? 0 : w32.KEYEVENTF_KEYUP, 0);
                                     } else if (key.Type == "JoystickKey")
                                     {
+                                       //It gets here
                                         if (key.joystickIndex < 1)
                                         {
                                             continue;
                                         }
-                                        Console.WriteLine("JoystickKey " + touch.Id + " (J: "+key.joystickIndex+", "+key.KeyName+"), " + key.IsPressed);
+                                        //Console.WriteLine("JoystickKey " + touch.Id + " (J: "+key.joystickIndex+", "+key.KeyName+"), " + key.IsPressed);
                                         foreach (var jKey in Form1.config.keys)
                                         {
-                                            if (jKey.IsEnabled && 
-                                                jKey.joystick != null && 
-                                                jKey.joystickIndex == key.joystickIndex && 
+                                            if (jKey.joystickIndex == key.joystickIndex && 
                                                 jKey.KeyCode == key.KeyCode)
                                             {
-                                                jKey.joystick.SetBtn(key.IsPressed, (UInt32)key.joystickIndex, key.KeyCode);
+                                                //Find joystick, since after I made multiple joysticks available my old code got borked
+                                                vJoy joystick = null;
+                                                foreach (var joyKey in Form1.config.keys)
+                                                {
+                                                    if (joyKey.joystick != null && joyKey.joystickIndex == jKey.joystickIndex && joyKey.IsEnabled)
+                                                    {
+                                                        joystick = joyKey.joystick;
+                                                        break;
+                                                    }
+                                                }
+                                                if (joystick == null)
+                                                {
+                                                    MessageBox.Show("Invalid joystick passed for key" + jKey.Index);
+                                                }
+                                                                                                
+                                                joystick.SetBtn(key.IsPressed, (UInt32)key.joystickIndex, key.KeyCode);
                                                 break;
                                             }
                                         }
@@ -1163,8 +1224,9 @@ namespace gobeam
                                     }
                                     var tac = new ProgressUpdate.Types.TactileUpdate();
                                     tac.Id = (UInt32)key.Index;
-                                    tac.Fired = key.IsPressed;
-                                    tac.Progress = (double)((key.IsPressed) ? 1.0 : 0.0);
+                                    tac.Fired = false;
+                                    if (key.progress == 1.0) tac.Fired = true;
+                                    tac.Progress = key.progress;
                                     prg.Tactile.Add(tac);
                                     isProgressUpdated = true;                                  
                                 }

@@ -51,6 +51,7 @@
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.grpControls = new System.Windows.Forms.GroupBox();
             this.grpJoystick = new System.Windows.Forms.GroupBox();
+            this.cmbJoyID = new System.Windows.Forms.ComboBox();
             this.cmbJoystick = new System.Windows.Forms.ComboBox();
             this.chkJoyUp = new System.Windows.Forms.CheckBox();
             this.btnTestJoystick = new System.Windows.Forms.Button();
@@ -70,7 +71,6 @@
             this.grpConnect = new System.Windows.Forms.GroupBox();
             this.tmrJoyPress = new System.Windows.Forms.Timer(this.components);
             this.tmrProgressUpdate = new System.Windows.Forms.Timer(this.components);
-            this.cmbJoyID = new System.Windows.Forms.ComboBox();
             this.statusStrip.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.grpControls.SuspendLayout();
@@ -96,6 +96,7 @@
             this.txtProcess.Tag = "Which process requires focus in order for keys to press";
             this.txtProcess.Text = "project64";
             this.txtProcess.TextChanged += new System.EventHandler(this.txtProcess_TextChanged);
+            this.txtProcess.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtProcess_KeyDown);
             // 
             // lblProcess
             // 
@@ -287,6 +288,20 @@
             this.grpJoystick.TabIndex = 18;
             this.grpJoystick.TabStop = false;
             this.grpJoystick.Text = "Joystick Control Emulator";
+            // 
+            // cmbJoyID
+            // 
+            this.cmbJoyID.FormattingEnabled = true;
+            this.cmbJoyID.Items.AddRange(new object[] {
+            "1",
+            "2",
+            "3",
+            "4"});
+            this.cmbJoyID.Location = new System.Drawing.Point(6, 19);
+            this.cmbJoyID.Name = "cmbJoyID";
+            this.cmbJoyID.Size = new System.Drawing.Size(62, 21);
+            this.cmbJoyID.TabIndex = 18;
+            this.cmbJoyID.Text = "1";
             // 
             // cmbJoystick
             // 
@@ -510,20 +525,6 @@
             // 
             this.tmrProgressUpdate.Interval = 500;
             this.tmrProgressUpdate.Tick += new System.EventHandler(this.tmrProgressUpdate_Tick);
-            // 
-            // cmbJoyID
-            // 
-            this.cmbJoyID.FormattingEnabled = true;
-            this.cmbJoyID.Items.AddRange(new object[] {
-            "1",
-            "2",
-            "3",
-            "4"});
-            this.cmbJoyID.Location = new System.Drawing.Point(6, 19);
-            this.cmbJoyID.Name = "cmbJoyID";
-            this.cmbJoyID.Size = new System.Drawing.Size(62, 21);
-            this.cmbJoyID.TabIndex = 18;
-            this.cmbJoyID.Text = "1";
             // 
             // Form1
             // 
